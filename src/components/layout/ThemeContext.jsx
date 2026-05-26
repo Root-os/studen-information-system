@@ -9,7 +9,8 @@ const colorThemes = {
     accent: "bg-blue-600",
     text: "text-blue-900",
     border: "border-blue-300",
-    hover: "hover:bg-blue-50"
+    hover: "hover:bg-blue-50",
+    bg: "bg-blue-50"
   },
   green: {
     primary: "bg-green-500",
@@ -17,7 +18,8 @@ const colorThemes = {
     accent: "bg-green-600",
     text: "text-green-900",
     border: "border-green-300",
-    hover: "hover:bg-green-50"
+    hover: "hover:bg-green-50",
+    bg: "bg-green-50"
   },
   purple: {
     primary: "bg-purple-500",
@@ -25,7 +27,8 @@ const colorThemes = {
     accent: "bg-purple-600", 
     text: "text-purple-900",
     border: "border-purple-300",
-    hover: "hover:bg-purple-50"
+    hover: "hover:bg-purple-50",
+    bg: "bg-purple-50"
   },
   orange: {
     primary: "bg-orange-500",
@@ -33,7 +36,8 @@ const colorThemes = {
     accent: "bg-orange-600",
     text: "text-orange-900", 
     border: "border-orange-300",
-    hover: "hover:bg-orange-50"
+    hover: "hover:bg-orange-50",
+    bg: "bg-orange-50"
   },
   dark: {
     primary: "bg-gray-800",
@@ -41,8 +45,10 @@ const colorThemes = {
     accent: "bg-gray-700",
     text: "text-gray-100",
     border: "border-gray-600",
-    hover: "hover:bg-gray-700"
+    hover: "hover:bg-gray-700",
+    bg: "bg-gray-950"
   }
+  
 };
 
 export const ThemeProvider = ({ children }) => {
@@ -52,6 +58,11 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem("colorTheme", currentTheme);
+    
+    // Apply global theme styles to body
+    const theme = colorThemes[currentTheme];
+    document.body.className = theme.bg;
+    
   }, [currentTheme]);
 
   const theme = colorThemes[currentTheme];

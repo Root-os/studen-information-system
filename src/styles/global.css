@@ -1,0 +1,289 @@
+/* Global theme styles that apply automatically */
+
+/* Card backgrounds */
+.card {
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+/* Default card background for light themes */
+body:not(.dark) .card {
+  background-color: rgba(156, 151, 151, 0.082);
+}
+
+.card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Form inputs */
+.form-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+}
+
+/* Default form input for light themes */
+body:not(.dark) .form-input {
+  background-color: white;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.form-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.btn-secondary:hover {
+  background-color: #d1d5db;
+}
+
+/* Text colors */
+.text-primary {
+  color: #111827;
+}
+
+.text-secondary {
+  color: #4b5563;
+}
+
+.text-muted {
+  color: #6b7280;
+}
+
+/* Default text colors for light themes */
+body:not(.dark) .text-primary {
+  color: #111827;
+}
+
+body:not(.dark) .text-secondary {
+  color: #4b5563;
+}
+
+body:not(.dark) .text-muted {
+  color: #6b7280;
+}
+
+/* Dark theme overrides */
+body.dark {
+  background-color: #030712 !important;
+  color: #f3f4f6 !important;
+}
+
+/* Override ALL white backgrounds in dark theme */
+body.dark .bg-white,
+body.dark [class*="bg-white"] {
+  background-color: #1f2937 !important;
+}
+
+/* Override ALL gray backgrounds in dark theme */
+body.dark [class*="bg-gray-50"],
+body.dark [class*="bg-gray-100"],
+body.dark [class*="bg-gray-200"],
+body.dark [class*="bg-gray-300"] {
+  background-color: #1f2937 !important;
+}
+
+/* Override ALL text colors in dark theme */
+body.dark .text-gray-900,
+body.dark .text-gray-800,
+body.dark .text-gray-700,
+body.dark [class*="text-gray-900"],
+body.dark [class*="text-gray-800"],
+body.dark [class*="text-gray-700"] {
+  color: #f3f4f6 !important;
+}
+
+body.dark .text-gray-600,
+body.dark .text-gray-500,
+body.dark [class*="text-gray-600"],
+body.dark [class*="text-gray-500"] {
+  color: #d1d5db !important;
+}
+
+/* Override ALL borders in dark theme */
+body.dark .border-gray-300,
+body.dark .border-gray-200,
+body.dark [class*="border-gray-300"],
+body.dark [class*="border-gray-200"] {
+  border-color: #4b5563 !important;
+}
+
+/* Override ALL form elements in dark theme */
+body.dark input,
+body.dark textarea,
+body.dark select,
+body.dark [class*="input"],
+body.dark [class*="textarea"],
+body.dark [class*="select"] {
+  background-color: #374151 !important;
+  color: white !important;
+  border-color: #4b5563 !important;
+}
+
+/* Override ALL divs with padding in dark theme */
+body.dark div[class*="p-"],
+body.dark div[class*="px-"],
+body.dark div[class*="py-"] {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+/* Override ALL rounded elements in dark theme */
+body.dark [class*="rounded"] {
+  background-color: #1f2937 !important;
+}
+
+/* Override ALL shadow elements in dark theme */
+body.dark [class*="shadow"] {
+  background-color: #1f2937 !important;
+}
+
+/* Universal override for any element that might have missed */
+body.dark * {
+  border-color: #4b5563 !important;
+}
+
+body.dark .card {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+body.dark .form-input {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: white !important;
+}
+
+body.dark .text-primary {
+  color: #f3f4f6 !important;
+}
+
+body.dark .text-secondary {
+  color: #d1d5db !important;
+}
+
+body.dark .text-muted {
+  color: #9ca3af !important;
+}
+
+/* Apply dark theme to all common elements */
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark h4,
+body.dark h5,
+body.dark h6 {
+  color: #f3f4f6 !important;
+}
+
+body.dark p,
+body.dark span,
+body.dark div {
+  color: #d1d5db !important;
+}
+
+body.dark button {
+  color: #f3f4f6 !important;
+}
+
+body.dark a {
+  color: #60a5fa !important;
+}
+
+body.dark a:hover {
+  color: #93c5fd !important;
+}
+
+/* Blue theme overrides */
+body.blue {
+  @apply bg-blue-50;
+}
+
+body.blue .card {
+  @apply bg-white;
+}
+
+body.blue .text-primary {
+  @apply text-blue-900;
+}
+
+body.blue .text-secondary {
+  @apply text-gray-600;
+}
+
+/* Green theme overrides */
+body.green {
+  @apply bg-green-50;
+}
+
+body.green .card {
+  @apply bg-white;
+}
+
+body.green .text-primary {
+  @apply text-green-900;
+}
+
+body.green .text-secondary {
+  @apply text-gray-600;
+}
+
+/* Purple theme overrides */
+body.purple {
+  @apply bg-purple-50;
+}
+
+body.purple .card {
+  @apply bg-white;
+}
+
+body.purple .text-primary {
+  @apply text-purple-900;
+}
+
+body.purple .text-secondary {
+  @apply text-gray-600;
+}
+
+/* Orange theme overrides */
+body.orange {
+  @apply bg-orange-50;
+}
+
+body.orange .card {
+  @apply bg-white;
+}
+
+body.orange .text-primary {
+  @apply text-orange-900;
+}
+
+body.orange .text-secondary {
+  @apply text-gray-600;
+}

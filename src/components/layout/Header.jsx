@@ -36,7 +36,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
         >
           <FiMenu size={20} />
         </button>
-        <h1 className={`text-xl md:text-2xl font-bold ${theme.text}`}>Dashboard</h1>
+        {/* <h1 className={`text-xl md:text-2xl font-bold ${theme.text}`}>Dashboard</h1>
         <div className="relative hidden md:block">
           <input
             type="text"
@@ -50,7 +50,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
           <FiSearch className={`absolute top-2.5 left-3 ${
             currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-400'
           }`} />
-        </div>
+        </div> */}
       </div>
       <div className="flex items-center gap-2 md:gap-4">
         <div className="relative">
@@ -97,7 +97,7 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
         </button>
         <button className={`flex items-center gap-2 p-2 rounded-full ${theme.hover}`}>
           <FiUser size={20} />
-          <span className={`hidden md:block font-medium ${theme.text}`}>John Doe</span>
+          {/* <span className={`hidden md:block font-medium ${theme.text}`}>John Doe</span> */}
         </button>
       </div>
     </header>
