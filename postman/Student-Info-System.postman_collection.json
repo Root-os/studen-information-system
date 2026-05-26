@@ -1,0 +1,198 @@
+{
+  "info": {
+    "name": "Student Information System API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "b5c7f2f0-7d4b-4f7e-9c91-0b2c0a1e1c01"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api","users"] }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api","users","me"] }
+          }
+        },
+        {
+          "name": "Get User By Id",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/users/1", "host": ["{{baseUrl}}"], "path": ["api","users","1"] }
+          }
+        },
+        {
+          "name": "Update Current User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key":"Content-Type","value":"application/json"}
+            ],
+            "body": {"mode":"raw","raw":"{\n  \"fullName\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"+251900000000\"\n}"},
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api","users","me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "List Courses",
+          "request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/courses","host":["{{baseUrl}}"],"path":["api","courses"]}}
+        },
+        {
+          "name": "Create Course",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"courseName\": \"Mathematics\",\n  \"courseCode\": \"MATH101\",\n  \"grade\": \"Grade 9\"\n}"},
+            "url": {"raw":"{{baseUrl}}/api/courses","host":["{{baseUrl}}"],"path":["api","courses"]}
+          }
+        },
+        {
+          "name": "Get Course By Id",
+          "request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/courses/1","host":["{{baseUrl}}"],"path":["api","courses","1"]}}
+        },
+        {
+          "name": "Update Course",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"courseName\": \"Advanced Math\"\n}"},
+            "url": {"raw":"{{baseUrl}}/api/courses/1","host":["{{baseUrl}}"],"path":["api","courses","1"]}
+          }
+        },
+        {
+          "name": "Delete Course",
+          "request": {"method":"DELETE","url": {"raw":"{{baseUrl}}/api/courses/1","host":["{{baseUrl}}"],"path":["api","courses","1"]}}
+        },
+        {
+          "name": "Enroll Student",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"studentId\": 1\n}"},
+            "url": {"raw":"{{baseUrl}}/api/courses/1/enroll","host":["{{baseUrl}}"],"path":["api","courses","1","enroll"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Enrollments",
+      "item": [
+        {"name":"List Enrollments","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/enrollments","host":["{{baseUrl}}"],"path":["api","enrollments"]}}},
+        {"name":"Create Enrollment","request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"studentId\": 1,\n  \"courseId\": 1\n}"},"url": {"raw":"{{baseUrl}}/api/enrollments","host":["{{baseUrl}}"],"path":["api","enrollments"]}}},
+        {"name":"Get Enrollment","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/enrollments/1","host":["{{baseUrl}}"],"path":["api","enrollments","1"]}}},
+        {"name":"Delete Enrollment","request": {"method":"DELETE","url": {"raw":"{{baseUrl}}/api/enrollments/1","host":["{{baseUrl}}"],"path":["api","enrollments","1"]}}},
+        {"name":"Courses For Student","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/enrollments/by-student/1","host":["{{baseUrl}}"],"path":["api","enrollments","by-student","1"]}}},
+        {"name":"Students For Course","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/enrollments/by-course/1","host":["{{baseUrl}}"],"path":["api","enrollments","by-course","1"]}}}
+      ]
+    },
+    {
+      "name": "Marks",
+      "item": [
+        {"name":"List Marks","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/marks","host":["{{baseUrl}}"],"path":["api","marks"]}}},
+        {"name":"Upsert Marks","request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"studentId\": 1,\n  \"courseId\": 1,\n  \"mark\": 85\n}"},"url": {"raw":"{{baseUrl}}/api/marks","host":["{{baseUrl}}"],"path":["api","marks"]}}},
+        {"name":"Get Marks","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/marks/1","host":["{{baseUrl}}"],"path":["api","marks","1"]}}},
+        {"name":"Delete Marks","request": {"method":"DELETE","url": {"raw":"{{baseUrl}}/api/marks/1","host":["{{baseUrl}}"],"path":["api","marks","1"]}}},
+        {"name":"Student Grade Report","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/marks/report/1","host":["{{baseUrl}}"],"path":["api","marks","report","1"]}}}
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {"name":"List Attendance","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/attendance","host":["{{baseUrl}}"],"path":["api","attendance"]}}},
+        {"name":"Create Attendance","request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"studentId\": 1,\n  \"date\": \"2026-01-10\",\n  \"attendance\": \"PRESENT\"\n}"},"url": {"raw":"{{baseUrl}}/api/attendance","host":["{{baseUrl}}"],"path":["api","attendance"]}}},
+        {"name":"Get Attendance","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/attendance/1","host":["{{baseUrl}}"],"path":["api","attendance","1"]}}},
+        {"name":"Update Attendance","request": {"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"attendance\": \"ABSENT\"\n}"},"url": {"raw":"{{baseUrl}}/api/attendance/1","host":["{{baseUrl}}"],"path":["api","attendance","1"]}}},
+        {"name":"Delete Attendance","request": {"method":"DELETE","url": {"raw":"{{baseUrl}}/api/attendance/1","host":["{{baseUrl}}"],"path":["api","attendance","1"]}}},
+        {"name":"Attendance Summary","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/attendance/summary/by-student?studentId=1","host":["{{baseUrl}}"],"path":["api","attendance","summary","by-student"],"query":[{"key":"studentId","value":"1"}]}}}
+      ]
+    },
+    {
+      "name": "Complaints",
+      "item": [
+        {"name":"List Complaints","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/complaints","host":["{{baseUrl}}"],"path":["api","complaints"]}}},
+        {"name":"My Complaints","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/complaints/me","host":["{{baseUrl}}"],"path":["api","complaints","me"]}}},
+        {"name":"Create Complaint","request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"respondentId\": 2,\n  \"complaint\": \"Noise in class\"\n}"},"url": {"raw":"{{baseUrl}}/api/complaints","host":["{{baseUrl}}"],"path":["api","complaints"]}}},
+        {"name":"Get Complaint","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/complaints/1","host":["{{baseUrl}}"],"path":["api","complaints","1"]}}},
+        {"name":"Update Complaint","request": {"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"complaint\": \"Updated text\"\n}"},"url": {"raw":"{{baseUrl}}/api/complaints/1","host":["{{baseUrl}}"],"path":["api","complaints","1"]}}},
+        {"name":"Update Complaint Status","request": {"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"status\": \"in_progress\",\n  \"resolutionNotes\": \"Investigating\"\n}"},"url": {"raw":"{{baseUrl}}/api/complaints/1/status","host":["{{baseUrl}}"],"path":["api","complaints","1","status"]}}},
+        {"name":"Delete Complaint","request": {"method":"DELETE","url": {"raw":"{{baseUrl}}/api/complaints/1","host":["{{baseUrl}}"],"path":["api","complaints","1"]}}}
+      ]
+    },
+    {
+      "name": "Blogs",
+      "item": [
+        {"name":"List Blogs","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/blogs","host":["{{baseUrl}}"],"path":["api","blogs"]}}},
+        {"name":"Recent Blogs","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/blogs/recent","host":["{{baseUrl}}"],"path":["api","blogs","recent"]}}},
+        {"name":"Create Blog","request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"blogDetail\": \"School event\",\n  \"date\": \"2026-01-10\",\n  \"image\": \"https://example.com/image.jpg\"\n}"},"url": {"raw":"{{baseUrl}}/api/blogs","host":["{{baseUrl}}"],"path":["api","blogs"]}}},
+        {"name":"Get Blog","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/blogs/1","host":["{{baseUrl}}"],"path":["api","blogs","1"]}}},
+        {"name":"Update Blog","request": {"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"blogDetail\": \"Updated\"\n}"},"url": {"raw":"{{baseUrl}}/api/blogs/1","host":["{{baseUrl}}"],"path":["api","blogs","1"]}}},
+        {"name":"Delete Blog","request": {"method":"DELETE","url": {"raw":"{{baseUrl}}/api/blogs/1","host":["{{baseUrl}}"],"path":["api","blogs","1"]}}}
+      ]
+    },
+    {
+      "name": "Punishments",
+      "item": [
+        {"name":"List Punishments","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/punishments","host":["{{baseUrl}}"],"path":["api","punishments"]}}},
+        {"name":"Create Punishment","request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"studentId\": 1,\n  \"reason\": \"Cheating\",\n  \"action\": \"Detention\",\n  \"date\": \"2026-01-10\"\n}"},"url": {"raw":"{{baseUrl}}/api/punishments","host":["{{baseUrl}}"],"path":["api","punishments"]}}},
+        {"name":"Get Punishment","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/punishments/1","host":["{{baseUrl}}"],"path":["api","punishments","1"]}}},
+        {"name":"Update Punishment","request": {"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"status\": \"APPEALED\"\n}"},"url": {"raw":"{{baseUrl}}/api/punishments/1","host":["{{baseUrl}}"],"path":["api","punishments","1"]}}},
+        {"name":"Delete Punishment","request": {"method":"DELETE","url": {"raw":"{{baseUrl}}/api/punishments/1","host":["{{baseUrl}}"],"path":["api","punishments","1"]}}}
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        {"name":"List Permissions","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/permissions","host":["{{baseUrl}}"],"path":["api","permissions"]}}},
+        {"name":"Create Permission","request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"userId\": 1,\n  \"type\": \"LEAVE\",\n  \"reason\": \"Family visit\",\n  \"fromDate\": \"2026-01-12\"\n}"},"url": {"raw":"{{baseUrl}}/api/permissions","host":["{{baseUrl}}"],"path":["api","permissions"]}}},
+        {"name":"Get Permission","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/permissions/1","host":["{{baseUrl}}"],"path":["api","permissions","1"]}}},
+        {"name":"Update Permission","request": {"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"reason\": \"Updated reason\"\n}"},"url": {"raw":"{{baseUrl}}/api/permissions/1","host":["{{baseUrl}}"],"path":["api","permissions","1"]}}},
+        {"name":"Approve Permission","request": {"method":"PATCH","url": {"raw":"{{baseUrl}}/api/permissions/1/approve","host":["{{baseUrl}}"],"path":["api","permissions","1","approve"]}}},
+        {"name":"Reject Permission","request": {"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"notes\": \"Insufficient justification\"\n}"},"url": {"raw":"{{baseUrl}}/api/permissions/1/reject","host":["{{baseUrl}}"],"path":["api","permissions","1","reject"]}}},
+        {"name":"Delete Permission","request": {"method":"DELETE","url": {"raw":"{{baseUrl}}/api/permissions/1","host":["{{baseUrl}}"],"path":["api","permissions","1"]}}}
+      ]
+    },
+    {
+      "name": "Flags",
+      "item": [
+        {"name":"List Flags","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/flags","host":["{{baseUrl}}"],"path":["api","flags"]}}},
+        {"name":"Create Flag","request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"userId\": 1,\n  \"flagType\": \"Behavior\",\n  \"severity\": \"MEDIUM\",\n  \"note\": \"Repeated tardiness\"\n}"},"url": {"raw":"{{baseUrl}}/api/flags","host":["{{baseUrl}}"],"path":["api","flags"]}}},
+        {"name":"Get Flag","request": {"method":"GET","url": {"raw":"{{baseUrl}}/api/flags/1","host":["{{baseUrl}}"],"path":["api","flags","1"]}}},
+        {"name":"Update Flag","request": {"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"note\": \"Escalated\",\n  \"severity\": \"HIGH\"\n}"},"url": {"raw":"{{baseUrl}}/api/flags/1","host":["{{baseUrl}}"],"path":["api","flags","1"]}}},
+        {"name":"Deactivate Flag","request": {"method":"PATCH","url": {"raw":"{{baseUrl}}/api/flags/1/deactivate","host":["{{baseUrl}}"],"path":["api","flags","1","deactivate"]}}},
+        {"name":"Delete Flag","request": {"method":"DELETE","url": {"raw":"{{baseUrl}}/api/flags/1","host":["{{baseUrl}}"],"path":["api","flags","1"]}}}
+      ]
+    }
+  ],
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:3000"}
+  ]
+}
