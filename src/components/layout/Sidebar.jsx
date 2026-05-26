@@ -1,5 +1,5 @@
-import React, { useContext, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React, { useContext, useState, useMemo, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import ThemeContext from "./ThemeContext";
 import { menuItems } from "./SidebarLink";
 import { AuthContext } from "../../contexts/AuthContext";
@@ -21,12 +21,15 @@ const themes = {
   dark: { bg: "bg-gray-900", hover: "hover:bg-gray-800", text: "text-white" },
 };
 
+
+
 const AppSidebar = ({ isOpen, toggleSidebar }) => {
   const { currentTheme } = useContext(ThemeContext);
   const location = useLocation();
   const navigate = useNavigate();
   const colors = themes[currentTheme] || themes.dark;
   const { logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   const [openFolders, setOpenFolders] = useState({}); 
 
@@ -34,14 +37,49 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
     setOpenFolders((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
-  const handleLinkClick = () => {
-    if (window.innerWidth < 768) toggleSidebar();
-  };
+const handleLinkClick = () => {
+  if (window.innerWidth < 768) {
+    toggleSidebar();
+  }
+};
 
 const handleLogout = () => {
-  logout(); // removes token from state & localStorage
-  navigate("/login"); // redirects to login
+  logout();
+  setOpenFolders({});
+  navigate("/login");
 };
+
+const filterByRole = (items, role) => {
+  if (!role) return [];
+
+  return items
+    .map((item) => {
+      if (item.children) {
+        const filteredChildren = item.children.filter((child) =>
+          child.roles?.includes(role)
+        );
+
+        if (filteredChildren.length === 0) return null;
+
+        return { ...item, children: filteredChildren };
+      }
+
+      if (!item.roles) return item;
+
+      return item.roles.includes(role) ? item : null;
+    })
+    .filter(Boolean);
+};
+
+const filteredMenu = useMemo(() => {
+  return filterByRole(menuItems, user?.role);
+}, [user?.role, menuItems]);
+
+useEffect(() => {
+  setOpenFolders({});
+}, [location.pathname, user?.role]);
+
+
 
   return (
     <>
@@ -79,7 +117,7 @@ const handleLogout = () => {
 
     {/* Navigation */}
     <nav className="flex flex-col gap-1 px-2 mt-4">
-      {menuItems.map((item) => {
+      {filteredMenu.map((item) => {
         const Icon = item.icon;
 
         if (item.children) {
@@ -99,16 +137,18 @@ const handleLogout = () => {
 
               {isOpen && isOpenFolder && (
                 <div className="ml-8 flex flex-col">
-                  {item.children.map((child) => (
-                    <Link
-                      key={child.path}
-                      to={child.path}
-                      onClick={handleLinkClick}
-                      className="p-2 rounded hover:bg-black/20"
-                    >
-                      {child.label}
-                    </Link>
-                  ))}
+{(item.children || [])
+  .filter((child) => child.path)
+  .map((child) => (
+    <Link
+      key={child.path}
+      to={child.path}
+      onClick={handleLinkClick}
+      className="p-2 rounded hover:bg-black/20"
+    >
+      {child.label}
+    </Link>
+))}
                 </div>
               )}
             </div>

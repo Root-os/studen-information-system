@@ -3,15 +3,18 @@ import AppSidebar from "./Sidebar";
 import Header from "./Header";
 import { useContext } from "react";
 import ThemeContext from "./ThemeContext";
+import { Outlet } from "react-router-dom";
 
-const AppLayout = ({ children }) => {
+const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { theme } = useContext(ThemeContext);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
-    <div className={`flex min-h-screen ${theme.secondary} transition-colors duration-300`}>
+    <div
+      className={`flex min-h-screen ${theme.secondary} transition-colors duration-300`}
+    >
       <AppSidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       <div
         className={`flex flex-col flex-1 transition-all duration-300 ${
@@ -19,7 +22,9 @@ const AppLayout = ({ children }) => {
         }`}
       >
         <Header toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
-        <main className="p-4 md:p-6">{children}</main>
+        <main className="p-4 md:p-6">
+          <Outlet />
+        </main>
       </div>
     </div>
   );
