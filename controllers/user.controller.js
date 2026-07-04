@@ -15,7 +15,7 @@ exports.registerUser = async (req, res) => {
       date_of_birth,
       email,
       password,
-      role,
+      roleId,
       category,
       generateId,
       ...otherFields
@@ -60,7 +60,7 @@ exports.registerUser = async (req, res) => {
         date_of_birth,
         email,
         password: hashedPassword,
-        role: role || "STUDENT",
+        roleId: roleId,
         category: category || "student",
         studentId,
         studentPhoto,
@@ -87,12 +87,13 @@ exports.registerUser = async (req, res) => {
 // Get all users (Admin only)
 exports.getAllUsers = async (req, res) => {
   try {
-    const { role } = req.query;
-    const whereClause = role ? { role } : {};
+    const { roleId } = req.query;
+    const whereClause = roleId ? { roleId } : {};
 
     const users = await User.findAll({
       where: whereClause,
       attributes: { exclude: ["password"] },
+      include: [{ model: Role, attributes: ["name"] }],
     });
 
     const baseUrl = process.env.baseUrl;
@@ -124,6 +125,7 @@ exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
       attributes: { exclude: ["password"] },
+      include: [{ model: Role, attributes: ["name"] }],
     });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -374,7 +376,8 @@ exports.loginUser = async (req, res) => {
         id: user.id,
         fullName: user.fullName,
         email: user.email,
-        role: user.role,
+        roleId: user.roleId,
+
       },
       process.env.JWT_SECRET || "secretkey",
       { expiresIn: "1d" },

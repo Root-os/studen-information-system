@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { sequelize, defineAssociations } = require('./models');
+const { sequelize } = require('./models');
 const errorHandler = require('./middleware/errorHandler');
 const fs = require('fs');
 const path = require('path');
@@ -45,10 +45,6 @@ const startServer = async () => {
     // Test database connection
     await sequelize.authenticate();
     logger.info('Database connection established successfully.');
-
-    // Define model associations
-    defineAssociations();
-    logger.info('Database associations defined.');
 
     // Sync models with database (use { force: true } in development to drop tables)
     if (process.env.NODE_ENV === 'development') {

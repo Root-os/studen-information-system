@@ -45,7 +45,6 @@ const User = sequelize.define(
       type: DataTypes.ENUM("student", "regullar", "unique_regular", "honorary_members"),
       defaultValue: "student",
     },
-
     email: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -55,8 +54,8 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    role: {
-      type: DataTypes.ENUM("ADMIN", "STUDENT", "TEACHER"),
+    roleId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     status: {

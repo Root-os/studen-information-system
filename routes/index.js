@@ -12,11 +12,16 @@ const studentCourseRoutes = require("./studentCourse.routes");
 const punishmentRoutes = require("./punishment.routes");
 const permissionRoutes = require("./permission.routes");
 const flagRoutes = require("./flag.routes");
-const authRoutes = require("./auth.routes");
+const authRoutes = require("./authRoutes");
 const managemnetRoutes = require("./managemntRoutes");
 const departmentRoutes = require("./departmentRoutes");
 const userDepartmentRoutes = require("./userDepartment.routes");
 const letterRoutes = require("./letterRoutes");
+const roleRoutes = require("./roleRoute");
+const rolePermissionRoutes = require("./rolePermissionRoutes");
+const assignUserRoutes = require("./assignUserRoutes");
+const staffRoutes = require("./staffRoute");
+const teacherRoutes = require("./teacherRoutes");
 
 // Auth routes
 router.use("/auth", authRoutes);
@@ -36,5 +41,10 @@ router.use("/managemnt", managemnetRoutes);
 router.use("/department", departmentRoutes);
 router.use("/user-department", userDepartmentRoutes);
 router.use("/letter", letterRoutes);
+router.use("/role", require("./roleRoute"));
+router.use("/role-permission", rolePermissionRoutes);
+router.use("/assign-user", assignUserRoutes);
+router.use("/staff", staffRoutes);
+router.use("/teacher", teacherRoutes);
 
 module.exports = router;

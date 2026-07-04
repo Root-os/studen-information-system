@@ -1,31 +1,29 @@
-const {
-  sequelize,
-  User,
-  Course,
-  StudentCourse,
-  MarkList,
-  Attendance,
-  Complain,
-  Punishment,
-  Permission,
-  Flag,
-  Blog,
-  Management,
-  Department,
-  UserDepartment,
-  Letter
-} = require('./exportModels');
+const User = require('./user');
+const Course = require('./courses');
+const StudentCourse = require('./studentCourse');
+const MarkList = require('./marklist');
+const Attendance = require('./attendance');
+const Complain = require('./complain');
+const Punishment = require('./punishment');
+const Permission = require('./permission');
+const Flag = require('./flag');
+const Blog = require('./blog');
+const sequelize = require('../config/database');
+const Management = require('./management');
+const Department = require('./departments');
+const UserDepartment = require('./userDepartment');
+const Letter = require('./letter');
+const Role = require('./role');
+const RolePermission = require('./rolePermission');
+const AssignUser = require('./assignUser');
+const Teacher = require('./teacher');
+const StaffUser = require('./staffUser');
 
-/**
- * Define all model associations with proper cascade rules
- */
-const defineAssociations = () => {
+
   // User Associations
   User.hasMany(StudentCourse, {
     foreignKey: 'studentId',
     as: 'studentCourses',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
   });
 
   User.belongsToMany(Course, {
@@ -322,11 +320,93 @@ Letter.belongsTo(Management, {
   constraints: false,
   as: 'receiverManagement'
 });
-};
+
+//========================================
+RolePermission.belongsTo(Role, {
+  foreignKey: 'roleId',
+  constraints: false,
+  as: 'role',
+});
+
+RolePermission.belongsTo(Department, {
+  foreignKey: 'departmentId',
+  constraints: false,
+  as: 'department',
+});
+
+Role.hasMany(RolePermission, {
+  foreignKey: 'roleId',
+  constraints: false,
+  as: 'rolePermissions',
+});
+
+Department.hasMany(RolePermission, {
+  foreignKey: 'departmentId',
+  constraints: false,
+  as: 'rolePermissions',
+});
+
+AssignUser.belongsTo(Teacher, {
+  foreignKey: 'teacherId',
+  constraints: false,
+  // as: 'teacher',
+});
+
+AssignUser.belongsTo(Department, {
+  foreignKey: 'departmentId',
+  constraints: false,
+  // as: 'department',
+});
+AssignUser.belongsTo(StaffUser, {
+  foreignKey: 'staffUserId',
+  constraints: false,
+  // as: 'staffUser',
+});
+
+AssignUser.belongsTo(Role, {
+  foreignKey: 'roleId',
+  constraints: false,
+  // as: 'role',
+});
+
+Teacher.hasMany(AssignUser, {
+  foreignKey: 'teacherId',
+  constraints: false,
+  // as: 'assignedDepartments',
+});
+
+Department.hasMany(AssignUser, {
+  foreignKey: 'departmentId',
+  constraints: false,
+  // as: 'assignedUsers',
+});
+
+Role.hasMany(AssignUser, {
+  foreignKey: 'roleId',
+  constraints: false,
+  // as: 'assignedUsers',
+});
+
+StaffUser.hasMany(AssignUser, {
+  foreignKey: 'staffUserId',
+  constraints: false,
+  // as: 'assignedDepartments',
+});
+
+User.belongsTo(Role, {
+  foreignKey: "roleId",
+  as: "role",
+});
+
+Role.hasMany(User, {
+  foreignKey: "roleId",
+  as: "users",
+});
+
+
 
 module.exports = {
-  defineAssociations,
-  // Re-export models for backward compatibility
+
   sequelize,
   User,
   Course,
@@ -341,5 +421,10 @@ module.exports = {
   Management,
   Department,
   UserDepartment,
-  Letter
+  Letter,
+  Role,
+  RolePermission,
+  AssignUser,
+  Teacher,
+  StaffUser
 };

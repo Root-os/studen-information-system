@@ -45,3 +45,25 @@ exports.authorize = (roles = []) => {
     next();
   };
 };
+
+exports.checkPermission = (module, action = "view") => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Super Admin bypasses everything
+    if (req.user?.role?.name === "Super Admin") {
+      return next();
+    }
+
+    const allowed = req.user?.permissions?.[module]?.[action];
+    if (!allowed) {
+      return res.status(403).json({
+        message: `Access denied: missing '${action}' permission for '${module}'`,
+      });
+    }
+
+    next();
+  };
+};

@@ -48,7 +48,7 @@ const Permission = sequelize.define('permission', {
     allowNull: true,
   }
 }, {
-  tableName: 'permissions',
+  tableName: 'leave-permissions',
   timestamps: true,
   charset: 'utf8',
   collate: 'utf8_general_ci',

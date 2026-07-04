@@ -13,6 +13,12 @@ const Management = require('./management');
 const Department = require('./departments');
 const UserDepartment = require('./userDepartment');
 const Letter = require('./letter');
+const Role = require('./role');
+const RolePermission = require('./rolePermission');
+const AssignUser = require('./assignUser');
+const Teacher = require('./teacher');
+const StaffUser = require('./staffUser');
+
 
 module.exports = {
   sequelize,
@@ -29,5 +35,10 @@ module.exports = {
   Management,
   Department,
   UserDepartment,
-  Letter
+  Letter,
+  Role,
+  RolePermission,
+  AssignUser,
+  Teacher,
+  StaffUser
 };
