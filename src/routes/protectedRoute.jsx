@@ -2,19 +2,17 @@ import React, { useContext } from "react";
 import { Navigate } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, user } = useContext(AuthContext);
+const ProtectedRoute = ({ children, permissionKey }) => {
+  const {
+    isAuthenticated,
+    hasModuleAccess,
+  } = useContext(AuthContext);
 
-  // User not logged in
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // User role not allowed
-  if (
-    allowedRoles &&
-    !allowedRoles.includes(user?.role)
-  ) {
+  if (permissionKey && !hasModuleAccess(permissionKey)) {
     return <Navigate to="/" replace />;
   }
 

@@ -32,6 +32,11 @@ import UserDepartmentPage from "../pages/Department/UserDepartmentPage";
 import LettersPage from "../pages/Letter/LetterPage";
 import LetterDetailPage from "../pages/Letter/LetterDetailPage";
 
+import RolePage from "../pages/Role/RolePage";
+import StaffPage from "../pages/Staff/Staffpage";
+import RolePermissionPage from "../pages/RolePermission/RolePermissionPage"
+import AssignUserPage from "../pages/AssignUser/assignUser"
+
 import ProtectedRoute from "./ProtectedRoute";
 
 import { AuthContext } from "../contexts/AuthContext";
@@ -44,24 +49,14 @@ const AppRoutes = () => {
       {/* Public Route */}
       <Route
         path="/login"
-        element={
-          isAuthenticated ? (
-            <Navigate to="/" replace />
-          ) : (
-            <LoginPage />
-          )
-        }
+        element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
       />
 
       {/* Protected Layout */}
       <Route
         path="/"
         element={
-          isAuthenticated ? (
-            <AppLayout />
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          isAuthenticated ? <AppLayout /> : <Navigate to="/login" replace />
         }
       >
         {/* Dashboard */}
@@ -71,7 +66,7 @@ const AppRoutes = () => {
         <Route
           path="register-student"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ProtectedRoute permissionKey="add student" >
               <RegisterStudent />
             </ProtectedRoute>
           }
@@ -80,7 +75,7 @@ const AppRoutes = () => {
         <Route
           path="view-students"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ProtectedRoute permissionKey="view students" >
               <StudentList />
             </ProtectedRoute>
           }
@@ -89,7 +84,7 @@ const AppRoutes = () => {
         <Route
           path="courses"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ProtectedRoute permissionKey="courses">
               <CoursesPage />
             </ProtectedRoute>
           }
@@ -98,7 +93,7 @@ const AppRoutes = () => {
         <Route
           path="students/:id"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ProtectedRoute permissionKey="view students" >
               <StudenrtDetail />
             </ProtectedRoute>
           }
@@ -107,7 +102,7 @@ const AppRoutes = () => {
         <Route
           path="enrolments"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN", "TEACHER"]}>
+            <ProtectedRoute permissionKey="enrolments">
               <EnrollmentsPage />
             </ProtectedRoute>
           }
@@ -116,7 +111,7 @@ const AppRoutes = () => {
         <Route
           path="take-attendance"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN", "TEACHER"]}>
+            <ProtectedRoute permissionKey="take attendance" >
               <AttendancePage />
             </ProtectedRoute>
           }
@@ -125,7 +120,7 @@ const AppRoutes = () => {
         <Route
           path="view-attendance"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN", "TEACHER", "STUDENT"]}>
+            <ProtectedRoute permissionKey="view attendance" >
               <AttendanceView />
             </ProtectedRoute>
           }
@@ -134,7 +129,7 @@ const AppRoutes = () => {
         <Route
           path="marklist"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN", "TEACHER"]}>
+            <ProtectedRoute permissionKey="mark list">
               <MarksPage />
             </ProtectedRoute>
           }
@@ -143,7 +138,7 @@ const AppRoutes = () => {
         <Route
           path="complaints"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN", "TEACHER", "STUDENT"]}>
+            <ProtectedRoute permissionKey="complaints">
               <ComplaintsPage />
             </ProtectedRoute>
           }
@@ -152,7 +147,7 @@ const AppRoutes = () => {
         <Route
           path="managements"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ProtectedRoute permissionKey="managment">
               <ManagmentPage />
             </ProtectedRoute>
           }
@@ -161,7 +156,7 @@ const AppRoutes = () => {
         <Route
           path="departments"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ProtectedRoute permissionKey="departments">
               <DepartmentPage />
             </ProtectedRoute>
           }
@@ -170,7 +165,7 @@ const AppRoutes = () => {
         <Route
           path="members"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ProtectedRoute permissionKey="members">
               <UserDepartmentPage />
             </ProtectedRoute>
           }
@@ -179,7 +174,7 @@ const AppRoutes = () => {
         <Route
           path="letter"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ProtectedRoute permissionKey="letter">
               <LettersPage />
             </ProtectedRoute>
           }
@@ -188,8 +183,44 @@ const AppRoutes = () => {
         <Route
           path="letters/:id"
           element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ProtectedRoute permissionKey="letter">
               <LetterDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="roles"
+          element={
+            <ProtectedRoute permissionKey="roles">
+              <RolePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="staffs"
+          element={
+            <ProtectedRoute permissionKey="staff">
+              <StaffPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="rolepermissions"
+          element={
+            <ProtectedRoute permissionKey="role permission">
+              <RolePermissionPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="assignusers"
+          element={
+            <ProtectedRoute permissionKey="assign user">
+              <AssignUserPage />
             </ProtectedRoute>
           }
         />

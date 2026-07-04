@@ -3,15 +3,18 @@ import ThemeContext from "../../components/layout/ThemeContext";
 import DataTable from "../../components/ui/simpletable";
 import api from "../../hooks/api";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
-import { useToast } from "../../components/ui/toast"; 
+import { useToast } from "../../components/ui/toast";
+import usePagePermission from "../../hooks/userPagePermission";
 
 const CoursesPage = () => {
   const { theme, currentTheme } = useContext(ThemeContext);
-  const { success, error } = useToast(); 
+  const { success, error } = useToast();
   const [courses, setCourses] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const { canCreate, canUpdate, canDelete } =
+    usePagePermission("courses");
 
   const [formData, setFormData] = useState({
     courseName: "",
@@ -73,45 +76,47 @@ const CoursesPage = () => {
     }
   };
 
- 
- const columns = [
-  {
-    header: "No.",
-    accessor: "rowNumber",
-    render: (row, index) => index + 1, // index will come from map
-  },
-  { header: "Course Name", accessor: "courseName" },
-  { header: "Course Code", accessor: "courseCode" },
-  { header: "Grade", accessor: "grade" },
-  {
-    header: "Actions",
-    accessor: "actions",
-    render: (row) => (
-      <div className="flex gap-2">
-        <button
-          onClick={() => handleEdit(row)}
-          className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
-        >
-          <FiEdit size={16} />
-        </button>
+  const columns = [
+    {
+      header: "No.",
+      accessor: "rowNumber",
+      render: (row, index) => index + 1, // index will come from map
+    },
+    { header: "Course Name", accessor: "courseName" },
+    { header: "Course Code", accessor: "courseCode" },
+    { header: "Grade", accessor: "grade" },
+    {
+      header: "Actions",
+      accessor: "actions",
+      render: (row) => (
+        <div className="flex gap-2">
+          {canUpdate && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
+            >
+              <FiEdit size={16} />
+            </button>
+          )}
 
-        <button
-          onClick={() => setConfirmDelete(row.id)}
-          className="p-2 rounded-md hover:bg-red-100 text-red-500"
-        >
-          <FiTrash2 size={16} />
-        </button>
-      </div>
-    ),
-  },
-];
+          {canDelete && (
+            <button
+              onClick={() => setConfirmDelete(row.id)}
+              className="p-2 rounded-md hover:bg-red-100 text-red-500"
+            >
+              <FiTrash2 size={16} />
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   const modalBg = currentTheme === "dark" ? "bg-gray-900" : "bg-white";
   const modalText = theme.text;
 
   return (
     <div className="space-y-6">
-
       {/* Header */}
       <div
         className={`${
@@ -120,15 +125,17 @@ const CoursesPage = () => {
       >
         <h2 className={`text-xl font-bold ${modalText}`}>Courses</h2>
 
-        <button
-          onClick={() => {
-            setEditingCourse(null);
-            setShowModal(true);
-          }}
-          className={`${theme.primary} text-white px-4 py-2 rounded`}
-        >
-          + Add Course
-        </button>
+        {canCreate &&
+          <button
+            onClick={() => {
+              setEditingCourse(null);
+              setShowModal(true);
+            }}
+            className={`${theme.primary} text-white px-4 py-2 rounded`}
+          >
+            + Add Course
+          </button>
+        }
       </div>
 
       {/* Table */}
