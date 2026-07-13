@@ -1,4 +1,4 @@
-const { User, sequelize } = require("../models");
+const { User, Role, sequelize } = require("../models");
 const { Op } = require("sequelize");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
@@ -21,7 +21,7 @@ exports.registerUser = async (req, res) => {
       ...otherFields
     } = req.body;
 
-    if (!fullName  || !email || !password) {
+    if (!fullName || !email || !password) {
       await transaction.rollback();
       return res.status(400).json({ message: "Required fields missing" });
     }
@@ -93,7 +93,7 @@ exports.getAllUsers = async (req, res) => {
     const users = await User.findAll({
       where: whereClause,
       attributes: { exclude: ["password"] },
-      include: [{ model: Role, attributes: ["name"] }],
+      include: [{ model: Role, attributes: ["id", "name"] }],
     });
 
     const baseUrl = process.env.baseUrl;
@@ -180,12 +180,12 @@ exports.updateStudent = async (req, res) => {
     }
 
     // Only allow updating STUDENT role
-    if (student.role !== "STUDENT") {
-      await transaction.rollback();
-      return res
-        .status(400)
-        .json({ message: "Cannot update non-student user" });
-    }
+    // if (student.role !== "STUDENT") {
+    //   await transaction.rollback();
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Cannot update non-student user" });
+    // }
 
     // Handle generateId flag
     let studentId = student.studentId; // existing ID
@@ -323,27 +323,29 @@ exports.updateCurrentUser = async (req, res) => {
 // Delete user (Admin only)
 exports.deleteUser = async (req, res) => {
   const transaction = await sequelize.transaction();
+
   try {
     const user = await User.findByPk(req.params.id, { transaction });
+
     if (!user) {
       await transaction.rollback();
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Prevent deleting self
-    if (user.id === req.user.id) {
+    // Safe check
+    if (req.user && user.id === req.user.id) {
       await transaction.rollback();
-      return res
-        .status(400)
-        .json({ message: "Cannot delete your own account" });
+      return res.status(400).json({ message: "Cannot delete your own account" });
     }
 
     await user.destroy({ transaction });
     await transaction.commit();
-    res.status(204).send({ message: "User deleted successfully" });
+
+    return res.status(200).json({ message: "User deleted successfully" });
+
   } catch (error) {
     await transaction.rollback();
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -377,7 +379,6 @@ exports.loginUser = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         roleId: user.roleId,
-
       },
       process.env.JWT_SECRET || "secretkey",
       { expiresIn: "1d" },
@@ -415,9 +416,12 @@ exports.getUsersByFilter = async (req, res) => {
     const usersWithFullUrls = users.map((user) => {
       const u = user.get({ plain: true });
 
-      if (u.studentPhoto) u.studentPhoto = `${baseUrl}/uploads/user/${u.studentPhoto}`;
-      if (u.familyPhoto) u.familyPhoto = `${baseUrl}/uploads/user/${u.familyPhoto}`;
-      if (u.otherDocument) u.otherDocument = `${baseUrl}/uploads/user/${u.otherDocument}`;
+      if (u.studentPhoto)
+        u.studentPhoto = `${baseUrl}/uploads/user/${u.studentPhoto}`;
+      if (u.familyPhoto)
+        u.familyPhoto = `${baseUrl}/uploads/user/${u.familyPhoto}`;
+      if (u.otherDocument)
+        u.otherDocument = `${baseUrl}/uploads/user/${u.otherDocument}`;
 
       return u;
     });

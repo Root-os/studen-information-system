@@ -22,6 +22,11 @@ const rolePermissionRoutes = require("./rolePermissionRoutes");
 const assignUserRoutes = require("./assignUserRoutes");
 const staffRoutes = require("./staffRoute");
 const teacherRoutes = require("./teacherRoutes");
+const academicYear = require("./academicYearRoutes");
+const classRoutes = require("./classRoutes");
+const enrollmentRoutes = require("./enrollmentRoutes");
+const courseAssignRoutes = require("./courseAssignRoutes");
+const atendanceRoutes = require("./atendanceRoutes")
 
 // Auth routes
 router.use("/auth", authRoutes);
@@ -29,11 +34,11 @@ router.use("/auth", authRoutes);
 // API Routes
 router.use("/users", userRoutes);
 router.use("/courses", courseRoutes);
-router.use("/attendance", attendanceRoutes);
+router.use("/attendance", atendanceRoutes);
 router.use("/marks", marklistRoutes);
 router.use("/complaints", complainRoutes);
 router.use("/blogs", blogRoutes);
-router.use("/enrollments", studentCourseRoutes);
+router.use("/enrollments", enrollmentRoutes);
 router.use("/punishments", punishmentRoutes);
 router.use("/permissions", permissionRoutes);
 router.use("/flags", flagRoutes);
@@ -46,5 +51,10 @@ router.use("/role-permission", rolePermissionRoutes);
 router.use("/assign-user", assignUserRoutes);
 router.use("/staff", staffRoutes);
 router.use("/teacher", teacherRoutes);
+router.use("/academicYear", academicYear);
+router.use("/class", classRoutes);
+router.use("/enrollment", enrollmentRoutes);
+router.use("/courseAssign", courseAssignRoutes);
+router.use("/attend", attendanceRoutes);
 
 module.exports = router;

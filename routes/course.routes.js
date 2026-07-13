@@ -5,6 +5,7 @@ const { validate } = require('../middleware/validation');
 const { createCourseSchema, updateCourseSchema, enrollSchema } = require('../validations/course.validation');
 const {auth, checkPermission} = require('../middleware/auth');
 
+router.post('/',  courseController.createCourse);
 router.use(auth);
 
 // List courses

@@ -1,39 +1,34 @@
-// 
-
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
-const Attendance = sequelize.define(
-  "attendance",
+const Class = sequelize.define(
+  "class",
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    courseAssignmentId: {
-      type: DataTypes.INTEGER,
+    className: {
+      type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
     },
-    attendanceDate: {
-      type: DataTypes.DATEONLY,
-      allowNull: false,
-    },
-    takenBy: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    remark: {
+    description: {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   {
-    tableName: "attendances",
+    tableName: "classes",
     timestamps: true,
     charset: "utf8",
     collate: "utf8_general_ci",
   },
 );
 
-module.exports = Attendance;
+module.exports = Class;

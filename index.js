@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('./utils/logger');
 const routes = require('./routes');
+const seedDatabase = require('./seeders')
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,6 +52,8 @@ const startServer = async () => {
       await sequelize.sync({ alter: false });
       logger.info('Database synchronized with models.');
     }
+
+    // await seedDatabase();
 
     // Start server
     const server = app.listen(PORT, () => {

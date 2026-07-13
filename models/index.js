@@ -18,7 +18,11 @@ const RolePermission = require('./rolePermission');
 const AssignUser = require('./assignUser');
 const Teacher = require('./teacher');
 const StaffUser = require('./staffUser');
-
+const CourseAssignment = require('./courseAssignment');
+const Enrollment = require('./enrollment');
+const AcademicYear = require('./academicYear');
+const Class = require('./class');
+const AttendanceDetail = require('./attendanceDetail');
 
   // User Associations
   User.hasMany(StudentCourse, {
@@ -232,18 +236,18 @@ const StaffUser = require('./staffUser');
 StudentCourse.belongsTo(User, { foreignKey: 'studentId', as: 'student' });
 StudentCourse.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
 
-Course.hasMany(Attendance, {
-  foreignKey: "courseId",
-  as: "attendances",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE"
-});
-Attendance.belongsTo(Course, {
-  foreignKey: "courseId",
-  as: "course",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE"
-});
+// Course.hasMany(Attendance, {
+//   foreignKey: "courseId",
+//   as: "attendances",
+//   onDelete: "CASCADE",
+//   onUpdate: "CASCADE"
+// });
+// Attendance.belongsTo(Course, {
+//   foreignKey: "courseId",
+//   as: "course",
+//   onDelete: "CASCADE",
+//   onUpdate: "CASCADE"
+// });
 
 // user <> management
 Management.belongsTo(User, { foreignKey: "userId" });
@@ -395,14 +399,128 @@ StaffUser.hasMany(AssignUser, {
 
 User.belongsTo(Role, {
   foreignKey: "roleId",
-  as: "role",
+  // as: "role",
 });
 
 Role.hasMany(User, {
   foreignKey: "roleId",
-  as: "users",
+  // as: "users",
+});
+//===========================================================================================================
+// Student -> Enrollment
+User.hasMany(Enrollment, {
+  foreignKey: "studentId",
+  // as: "enrollments",
 });
 
+Enrollment.belongsTo(User, {
+  foreignKey: "studentId",
+  // as: "student",
+});
+
+// Class -> Enrollment
+Class.hasMany(Enrollment, {
+  foreignKey: "classId",
+  // as: "enrollments",
+});
+
+Enrollment.belongsTo(Class, {
+  foreignKey: "classId",
+  // as: "class",
+});
+
+// AcademicYear -> Enrollment
+AcademicYear.hasMany(Enrollment, {
+  foreignKey: "academicYearId",
+  // as: "enrollments",
+});
+
+Enrollment.belongsTo(AcademicYear, {
+  foreignKey: "academicYearId",
+  // as: "academicYear",
+});
+
+Course.hasMany(CourseAssignment, {
+  foreignKey: "courseId",
+  // as: "assignments",
+});
+
+CourseAssignment.belongsTo(Course, {
+  foreignKey: "courseId",
+  // as: "course",
+});
+
+Teacher.hasMany(CourseAssignment, {
+  foreignKey: "teacherId",
+  as: "courseAssignments",
+});
+
+CourseAssignment.belongsTo(Teacher, {
+  foreignKey: "teacherId",
+  as: "teacher",
+});
+
+Class.hasMany(CourseAssignment, {
+  foreignKey: "classId",
+  // as: "courseAssignments",
+});
+
+CourseAssignment.belongsTo(Class, {
+  foreignKey: "classId",
+  // as: "class",
+});
+
+AcademicYear.hasMany(CourseAssignment, {
+  foreignKey: "academicYearId",
+  // as: "courseAssignments",
+});
+
+CourseAssignment.belongsTo(AcademicYear, {
+  foreignKey: "academicYearId",
+  // as: "academicYear",
+});
+
+CourseAssignment.hasMany(Attendance, {
+  foreignKey: "courseAssignmentId",
+  // as: "attendances",
+});
+
+Attendance.belongsTo(CourseAssignment, {
+  foreignKey: "courseAssignmentId",
+  // as: "courseAssignment",
+});
+
+Attendance.hasMany(AttendanceDetail, {
+  foreignKey: "attendanceId",
+  // as: "details",
+});
+
+AttendanceDetail.belongsTo(Attendance, {
+  foreignKey: "attendanceId",
+  // as: "attendance",
+});
+
+Enrollment.hasMany(AttendanceDetail, {
+  foreignKey: "enrollmentId",
+  // as: "attendanceDetails",
+});
+
+AttendanceDetail.belongsTo(Enrollment, {
+  foreignKey: "enrollmentId",
+  // as: "enrollment",
+});
+
+// Teacher.js
+Teacher.hasMany(Attendance, {
+  foreignKey: "takenBy",
+  // as: "attendances",
+});
+
+// Attendance.js
+Attendance.belongsTo(Teacher, {
+  foreignKey: "takenBy",
+  // as: "teacher",
+});
 
 
 module.exports = {
@@ -426,5 +544,10 @@ module.exports = {
   RolePermission,
   AssignUser,
   Teacher,
-  StaffUser
+  StaffUser,
+  Class,
+  AcademicYear,
+  AttendanceDetail,
+  CourseAssignment,
+  
 };
