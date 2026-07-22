@@ -4,6 +4,9 @@ import { IconButton } from "@mui/material";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
 import DataTable from "../../components/ui/table";
 import api from "../../hooks/api";
+import usePagePermission from "../../hooks/userPagePermission";
+import ConfirmModal from "../../components/ui/deleteConfirmationModal";
+import StatusModal from "../../components/ui/successModal";
 
 const StudentList = () => {
   const [students, setStudents] = useState([]);
@@ -11,20 +14,45 @@ const StudentList = () => {
 
   // Filters start empty for user selection
   const [statusFilter, setStatusFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const { canView, canUpdate, canDelete } = usePagePermission("view students");
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const navigate = useNavigate();
 
-  // Initial load: default ACTIVE/STUDENT/student
+  const [statusModal, setStatusModal] = useState({
+    open: false,
+    type: "success", // success | error
+    title: "",
+    message: "",
+  });
+
+  const showStatus = (type, title, message) => {
+    setStatusModal({
+      open: true,
+      type,
+      title,
+      message,
+    });
+  };
+
   useEffect(() => {
-    fetchStudents({ status: "ACTIVE", role: "STUDENT", category: "student" });
+    fetchStudents({
+      status: "ACTIVE",
+    });
   }, []);
 
   const fetchStudents = async (filters = {}) => {
     setLoading(true);
+
     try {
-      const res = await api.get("/users/filter", { params: filters });
+      const res = await api.get("/users", {
+        params: filters,
+      });
+
       setStudents(res.data);
     } catch (err) {
       console.error(err);
@@ -35,22 +63,58 @@ const StudentList = () => {
 
   const handleFilter = () => {
     const filters = {};
+
     if (statusFilter) filters.status = statusFilter;
-    if (roleFilter) filters.role = roleFilter;
     if (categoryFilter) filters.category = categoryFilter;
+
     fetchStudents(filters);
   };
 
   const handleReset = () => {
     setStatusFilter("");
-    setRoleFilter("");
     setCategoryFilter("");
-    // Reload initial default
-    fetchStudents({ status: "ACTIVE", role: "STUDENT", category: "student" });
+    fetchStudents();
+  };
+
+  const handleDelete = async () => {
+    if (!selectedStudent) return;
+
+    setDeleting(true);
+
+    try {
+      await api.delete(`/users/${selectedStudent.id}`);
+
+      setStudents((prev) => prev.filter((s) => s.id !== selectedStudent.id));
+
+      setDeleteModalOpen(false);
+      setSelectedStudent(null);
+      showStatus(
+        "success",
+        "Update Successful",
+        "Student deleted successfully",
+      );
+    } catch (err) {
+      console.error(err);
+      showStatus(
+        "error",
+        "Update Failed",
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Something went wrong while deleting student",
+      );
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const columns = [
-    { id: "rowNumber", header: "#", size: 60, Cell: ({ row }) => row.index + 1 },
+    {
+      id: "rowNumber",
+      header: "#",
+      size: 60,
+      Cell: ({ row }) => row.index + 1,
+    },
     { accessorKey: "studentId", header: "Student ID" },
     { accessorKey: "fullName", header: "Full Name" },
     { accessorKey: "email", header: "Email" },
@@ -71,7 +135,10 @@ const StudentList = () => {
     { accessorKey: "familyAddress", header: "Family Address" },
     { accessorKey: "registeredDate", header: "Registered Date" },
     { accessorKey: "status", header: "Status" },
-    { accessorKey: "role", header: "Role" },
+    {
+      accessorFn: (row) => row.role?.name,
+      header: "Role",
+    },
     { accessorKey: "category", header: "Category" },
   ];
 
@@ -87,17 +154,6 @@ const StudentList = () => {
           <option value="">Select Status</option>
           <option value="ACTIVE">Active</option>
           <option value="INACTIVE">Inactive</option>
-        </select>
-
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="border rounded px-3 py-1"
-        >
-          <option value="">Select Role</option>
-          <option value="STUDENT">Student</option>
-          <option value="TEACHER">Teacher</option>
-          <option value="ADMIN">Admin</option>
         </select>
 
         <select
@@ -133,19 +189,57 @@ const StudentList = () => {
         enableRowActions
         renderRowActions={({ row }) => (
           <>
-            <IconButton color="primary" onClick={() => console.log("Edit", row.original)}>
-              <Edit />
-            </IconButton>
+            {canUpdate && (
+              <IconButton
+                color="primary"
+                onClick={() => navigate(`/students/edit/${row.original.id}`)}
+              >
+                <Edit />
+              </IconButton>
+            )}
 
-            <IconButton color="info" onClick={() => navigate(`/students/${row.original.id}`)}>
-              <Visibility />
-            </IconButton>
+            {canView && (
+              <IconButton
+                color="info"
+                onClick={() => navigate(`/students/${row.original.id}`)}
+              >
+                <Visibility />
+              </IconButton>
+            )}
 
-            <IconButton color="error" onClick={() => console.log("Delete", row.original)}>
-              <Delete />
-            </IconButton>
+            {canDelete && (
+              <IconButton
+                color="error"
+                onClick={() => {
+                  setSelectedStudent(row.original);
+                  setDeleteModalOpen(true);
+                }}
+              >
+                <Delete />
+              </IconButton>
+            )}
           </>
         )}
+      />
+
+      <ConfirmModal
+        open={deleteModalOpen}
+        title="Delete Student"
+        message={`Are you sure you want to delete ${selectedStudent?.fullName}? This action cannot be undone.`}
+        loading={deleting}
+        onCancel={() => {
+          setDeleteModalOpen(false);
+          setSelectedStudent(null);
+        }}
+        onConfirm={handleDelete}
+      />
+
+      <StatusModal
+        open={statusModal.open}
+        type={statusModal.type}
+        title={statusModal.title}
+        message={statusModal.message}
+        onClose={() => setStatusModal((prev) => ({ ...prev, open: false }))}
       />
     </div>
   );

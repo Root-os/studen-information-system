@@ -4,34 +4,89 @@ import DataTable from "../../components/ui/simpletable";
 import api from "../../hooks/api";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { useToast } from "../../components/ui/toast";
+import CrudFormModal from "../../components/ui/crudForm";
+import usePagePermission from "../../hooks/userPagePermission";
+import ConfirmModal from "../../components/ui/deleteConfirmationModal";
+import StatusModal from "../../components/ui/successModal";
 
 const EnrollmentsPage = () => {
   const { theme, currentTheme } = useContext(ThemeContext);
-  const { success, error } = useToast();
+  const {  error } = useToast();
+
+  const { canCreate, canUpdate, canDelete } = usePagePermission("enrolments");
 
   const [enrollments, setEnrollments] = useState([]);
   const [students, setStudents] = useState([]);
-  const [courses, setCourses] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingEnrollment, setEditingEnrollment] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  // const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const [classes, setClasses] = useState([]);
+  const [academicYears, setAcademicYears] = useState([]);
 
   const [formData, setFormData] = useState({
     studentId: "",
-    courseId: "",
+    classId: "",
+    academicYearId: "",
+    enrollmentDate: "",
+    status: "ACTIVE",
   });
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [statusModal, setStatusModal] = useState({
+    open: false,
+    type: "success", // success | error
+    title: "",
+    message: "",
+  });
+
+  const showStatus = (type, title, message) => {
+    setStatusModal({
+      open: true,
+      type,
+      title,
+      message,
+    });
+  };
+
   // Fetch enrollments, students, and courses
-  useEffect(() => {
-    fetchEnrollments();
-    fetchStudents();
-    fetchCourses();
-  }, []);
+
+  const fetchClasses = async () => {
+    try {
+      const res = await api.get("/class");
+      setClasses(res.data.data || []);
+    } catch {
+      error("Failed to fetch classes");
+    }
+  };
+
+  const fetchAcademicYears = async () => {
+    try {
+      const res = await api.get("/academicYear");
+      const years = res.data.data || [];
+
+      setAcademicYears(years);
+
+      const currentYear = years.find((year) => year.isCurrent);
+
+      if (currentYear) {
+        setFormData((prev) => ({
+          ...prev,
+          academicYearId: currentYear.id,
+        }));
+      }
+    } catch {
+      error("Failed to fetch academic years");
+    }
+  };
 
   const fetchEnrollments = async () => {
     try {
       const res = await api.get("/enrollments");
-      setEnrollments(res.data);
+      setEnrollments(res.data.data || []);
     } catch {
       error("Failed to fetch enrollments");
     }
@@ -39,20 +94,33 @@ const EnrollmentsPage = () => {
 
   const fetchStudents = async () => {
     try {
-      const res = await api.get("/users"); // fetch users with student role
-      setStudents(res.data.filter((u) => u.role === "STUDENT"));
+      const res = await api.get("/users");
+
+      // const users = res.data.data || res.data || [];
+
+      setStudents(res.data.data || res.data || []);
     } catch {
       error("Failed to fetch students");
     }
   };
 
-  const fetchCourses = async () => {
-    try {
-      const res = await api.get("/courses");
-      setCourses(res.data);
-    } catch {
-      error("Failed to fetch courses");
-    }
+  useEffect(() => {
+    fetchEnrollments();
+    fetchStudents();
+    fetchClasses();
+    fetchAcademicYears();
+  }, []);
+
+  const resetForm = () => {
+    const currentYear = academicYears.find((y) => y.isCurrent);
+
+    return {
+      studentId: "",
+      classId: "",
+      academicYearId: currentYear?.id || "",
+      enrollmentDate: "",
+      status: "ACTIVE",
+    };
   };
 
   const handleSubmit = async (e) => {
@@ -60,184 +128,287 @@ const EnrollmentsPage = () => {
     try {
       if (editingEnrollment) {
         await api.put(`/enrollments/${editingEnrollment.id}`, formData);
-        success("Enrollment updated successfully");
+        // success("Enrollment updated successfully");
+        showStatus(
+          "success",
+          "Update Successful",
+          "Enrollment updated successfully",
+        );
       } else {
         await api.post("/enrollments", formData);
-        success("Enrollment created successfully");
+        // success("Enrollment created successfully");
+        showStatus(
+          "success",
+          "Creation Successful",
+          "Enrollment created successfully",
+        );
       }
 
       setShowModal(false);
       setEditingEnrollment(null);
-      setFormData({ studentId: "", courseId: "" });
+      setFormData(resetForm());
       fetchEnrollments();
-    } catch {
+    } catch (err) {
       error("Something went wrong");
+      showStatus(
+        "error",
+        "Update Failed",
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Something went wrong while creating/updating enrollment",
+      );
     }
   };
 
   const handleEdit = (enrollment) => {
     setEditingEnrollment(enrollment);
+
     setFormData({
       studentId: enrollment.studentId,
-      courseId: enrollment.courseId,
+      classId: enrollment.classId,
+      academicYearId: enrollment.academicYearId,
+      enrollmentDate: enrollment.enrollmentDate,
+      status: enrollment.status,
     });
+
     setShowModal(true);
   };
 
   const handleDelete = async () => {
+    if (!selectedEnrollment) return;
+
     try {
-      await api.delete(`/enrollments/${confirmDelete}`);
-      success("Enrollment deleted successfully");
-      setConfirmDelete(null);
+      setDeleting(true);
+
+      await api.delete(`/enrollments/${selectedEnrollment.id}`);
+
+      showStatus(
+        "success",
+        "Delete Successful",
+        "Enrollment deleted successfully",
+      );
+
       fetchEnrollments();
-    } catch {
-      error("Failed to delete enrollment");
+
+      setDeleteModalOpen(false);
+      setSelectedEnrollment(null);
+    } catch (err) {
+      showStatus(
+        "error",
+        "Delete Failed",
+        err?.response?.data?.message || err?.message,
+      );
+    } finally {
+      setDeleting(false);
     }
   };
+
+  const enrollmentFields = [
+    {
+      name: "studentId",
+      label: "Student",
+      type: "select",
+      options: students.map((student) => ({
+        value: student.id,
+        label: student.fullName,
+      })),
+    },
+
+    {
+      name: "classId",
+      label: "Class",
+      type: "select",
+      options: classes.map((cls) => ({
+        value: cls.id,
+        label: cls.className,
+      })),
+    },
+
+    {
+      name: "academicYearId",
+      label: "Academic Year",
+      type: "select",
+      disabled: true,
+      options: academicYears.map((year) => ({
+        value: year.id,
+        label: year.yearName,
+      })),
+    },
+
+    {
+      name: "enrollmentDate",
+      label: "Enrollment Date",
+      type: "date",
+    },
+
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        {
+          value: "ACTIVE",
+          label: "ACTIVE",
+        },
+        {
+          value: "TRANSFERRED",
+          label: "TRANSFERRED",
+        },
+        {
+          value: "DROPPED",
+          label: "DROPPED",
+        },
+        {
+          value: "COMPLETED",
+          label: "COMPLETED",
+        },
+      ],
+    },
+  ];
 
   const columns = [
     {
       header: "No.",
       accessor: "rowNumber",
-      render: (row, index) =>
-        (index + 1) + (10 * ((row.page || 1) - 1)), // adjust if paginated
+      render: (_, index) => index + 1,
     },
-    { header: "Student Name", accessor: "studentName", render: (row) => row.student.fullName },
-    { header: "Student Email", accessor: "studentEmail", render: (row) => row.student.email },
-    { header: "Course Name", accessor: "courseName", render: (row) => row.course.courseName },
-    { header: "Course Code", accessor: "courseCode", render: (row) => row.course.courseCode },
+    {
+      header: "Student",
+      accessor: "student",
+      render: (row) => row.User?.fullName ?? "-",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      render: (row) => row.class?.className ?? "-",
+    },
+    {
+      header: "Academic Year",
+      accessor: "academicYear",
+      render: (row) => row.academicYear?.yearName ?? "-",
+    },
+    {
+      header: "Enrollment Date",
+      accessor: "enrollmentDate",
+    },
+    {
+      header: "Status",
+      accessor: "status",
+    },
     {
       header: "Actions",
       accessor: "actions",
       render: (row) => (
         <div className="flex gap-2">
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
-          >
-            <FiEdit size={16} />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
+            >
+              <FiEdit size={16} />
+            </button>
+          )}
 
-          <button
-            onClick={() => setConfirmDelete(row.id)}
-            className="p-2 rounded-md hover:bg-red-100 text-red-500"
-          >
-            <FiTrash2 size={16} />
-          </button>
+          {canDelete && (
+            <button
+              onClick={() => {
+                setSelectedEnrollment(row);
+                setDeleteModalOpen(true);
+              }}
+              className="p-2 rounded-md hover:bg-red-100 text-red-500"
+            >
+              <FiTrash2 size={16} />
+            </button>
+          )}
         </div>
       ),
     },
   ];
 
-  const modalBg = currentTheme === "dark" ? "bg-gray-900" : "bg-white";
+  // const modalBg = currentTheme === "dark" ? "bg-gray-900" : "bg-white";
   const modalText = theme.text;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className={`p-6 rounded-lg shadow flex justify-between ${currentTheme === "dark" ? "bg-gray-800" : "bg-white"}`}>
+      <div
+        className={`p-6 rounded-lg shadow flex justify-between ${currentTheme === "dark" ? "bg-gray-800" : "bg-white"}`}
+      >
         <h2 className={`text-xl font-bold ${modalText}`}>Enrollments</h2>
-        <button
-          onClick={() => {
-            setEditingEnrollment(null);
-            setShowModal(true);
-          }}
-          className={`${theme.primary} text-white px-4 py-2 rounded`}
-        >
-          + Add Enrollment
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => {
+              const currentYear = academicYears.find((y) => y.isCurrent);
+
+              setFormData({
+                studentId: "",
+                classId: "",
+                academicYearId: currentYear?.id || "",
+                enrollmentDate: "",
+                status: "ACTIVE",
+              });
+
+              setEditingEnrollment(null);
+              setShowModal(true);
+            }}
+            className={`${theme.primary} text-white px-4 py-2 rounded`}
+          >
+            + Add Enrollment
+          </button>
+        )}
       </div>
 
       {/* Table */}
-      <div className={`p-6 rounded-lg shadow ${currentTheme === "dark" ? "bg-gray-800" : "bg-white"}`}>
+      <div
+        className={`p-6 rounded-lg shadow ${currentTheme === "dark" ? "bg-gray-800" : "bg-white"}`}
+      >
         <DataTable columns={columns} data={enrollments} />
       </div>
 
       {/* Create/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-opacity-40">
-          <div className={`${modalBg} p-6 rounded-lg w-[400px]`}>
-            <h3 className={`text-lg font-semibold mb-4 ${modalText}`}>
-              {editingEnrollment ? "Edit Enrollment" : "Add Enrollment"}
-            </h3>
+      <CrudFormModal
+        open={showModal}
+        title={editingEnrollment ? "Edit Enrollment" : "Add Enrollment"}
+        fields={enrollmentFields}
+        values={formData}
+        onChange={setFormData}
+        onSubmit={handleSubmit}
+        onClose={() => {
+          setShowModal(false);
+          setEditingEnrollment(null);
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <select
-                required
-                value={formData.studentId}
-                onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                className={`${currentTheme === "dark" ? "bg-gray-700 text-white border-gray-600" : "bg-white text-gray-900 border-gray-300"} w-full p-2 border rounded`}
-              >
-                <option value="">Select Student</option>
-                {students.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.fullName} ({s.email})
-                  </option>
-                ))}
-              </select>
-
-              <select
-                required
-                value={formData.courseId}
-                onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                className={`${currentTheme === "dark" ? "bg-gray-700 text-white border-gray-600" : "bg-white text-gray-900 border-gray-300"} w-full p-2 border rounded`}
-              >
-                <option value="">Select Course</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.courseName} ({c.courseCode})
-                  </option>
-                ))}
-              </select>
-
-              <div className="flex justify-end gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className={`${currentTheme === "dark" ? "border-gray-600 text-white" : "border-gray-300 text-gray-900"} px-3 py-2 border rounded`}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className={`${theme.primary} text-white px-4 py-2 rounded`}
-                >
-                  {editingEnrollment ? "Update" : "Create"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          setFormData({
+            studentId: "",
+            classId: "",
+            academicYearId: "",
+            enrollmentDate: "",
+            status: "ACTIVE",
+          });
+        }}
+        submitLabel={editingEnrollment ? "Update" : "Create"}
+      />
 
       {/* Delete Confirmation */}
-      {confirmDelete && (
-        <div className="fixed inset-0 flex items-center justify-center bg-opacity-40">
-          <div className={`${modalBg} p-6 rounded-lg w-[350px]`}>
-            <h3 className={`text-lg font-semibold mb-3 ${modalText}`}>Delete Enrollment</h3>
-            <p className={`mb-4 text-sm ${modalText}`}>
-              Are you sure you want to delete this enrollment?
-            </p>
+      <ConfirmModal
+        open={deleteModalOpen}
+        title="Delete Enrollment"
+        message={`Are you sure you want to delete this enrollment? This action cannot be undone.`}
+        loading={deleting}
+        onCancel={() => {
+          setDeleteModalOpen(false);
+          setSelectedEnrollment(null);
+        }}
+        onConfirm={handleDelete}
+      />
 
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setConfirmDelete(null)}
-                className={`${currentTheme === "dark" ? "border-gray-600 text-white" : "border-gray-300 text-gray-900"} px-3 py-2 border rounded`}
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StatusModal
+        open={statusModal.open}
+        type={statusModal.type}
+        title={statusModal.title}
+        message={statusModal.message}
+        onClose={() => setStatusModal((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 };

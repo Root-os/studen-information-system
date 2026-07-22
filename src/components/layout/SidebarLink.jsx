@@ -21,50 +21,29 @@ export const menuItems = [
   {
     label: "Students",
     icon: FiUsers,
+    permissionKey: "students",
     children: [
       {
         label: "Add Student",
         icon: FiUser,
         path: "/register-student",
-        permissionKey: "add student",
+        // permissionKey: "add student",
         action: "create",
       },
       {
         label: "View Students",
         icon: FiUser,
         path: "/view-students",
-        permissionKey: "view students",
-        action: "view"
+        // permissionKey: "view students",
+        action: "view",
       },
     ],
   },
-
   {
-    label: "Courses",
-    icon: FiBook,
-    path: "/courses",
-    permissionKey: "courses",
-  },
-
-  {
-    label: "Attendance",
-    icon: FiClipboard,
-    children: [
-      {
-        label: "Take Attendance",
-        icon: FiClipboard,
-        path: "/take-attendance",
-        permissionKey: "take attendance",
-        action: "create"
-      },
-      {
-        label: "View Attendance",
-        icon: FiClipboard,
-        path: "/view-attendance",
-        permissionKey: "view attendance",
-        action: "view"
-      },
-    ],
+    label: "Teacher",
+    icon: FiFileText,
+    path: "/teachers",
+    permissionKey: "teachers",
   },
 
   {
@@ -75,43 +54,115 @@ export const menuItems = [
   },
 
   {
-    label: "Managment",
+    label: "Courses",
+    icon: FiBook,
+    path: "/courses",
+    permissionKey: "courses",
+  },
+
+  {
+    label: "Class",
+    icon: FiBook,
+    path: "/classes",
+    permissionKey: "classes",
+  },
+
+  {
+    label: "Course Assign",
     icon: FiFileText,
-    path: "/managements",
-    permissionKey: "managment",
+    path: "/courseAssignment",
+    permissionKey: "course-assignments",
+  },
+
+  {
+    label: "Attendance",
+    icon: FiClipboard,
+    permissionKey: "attendance",
+    allowedRoles: ["Teacher"], // always visible for Teacher role
+    children: [
+      {
+        label: "Take Attendance",
+        icon: FiClipboard,
+        path: "/take-attendance",
+        action: "create",
+      },
+      {
+        label: "View Attendance",
+        icon: FiClipboard,
+        path: "/view-attendance",
+        action: "view",
+      },
+    ],
+  },
+
+  {
+    label: "Mark List",
+    icon: FiClipboard,
+    permissionKey: "marklist",
+    allowedRoles: ["Teacher"], 
+    children: [
+      {
+        label: "Fill Mark",
+        icon: FiClipboard,
+        path: "/fill-marks",
+        action: "create",
+      },
+      {
+        label: "Mark Lists",
+        icon: FiClipboard,
+        path: "/view-marks",
+        action: "view",
+      },
+    ],
+  },
+
+  {
+    label: "Roles",
+    icon: FiFileText,
+    path: "/roles",
+    permissionKey: "roles",
+  },
+
+  {
+    label: "Staff",
+    icon: FiFileText,
+    path: "/staffs",
+    permissionKey: "staff",
   },
 
   {
     label: "Departments",
     icon: FiClipboard,
-    children: [
-      {
-        label: "Departments",
-        icon: FiClipboard,
-        path: "/departments",
-        permissionKey: "departments",
-      },
-      {
-        label: "Members",
-        icon: FiClipboard,
-        path: "/members",
-        permissionKey: "members",
-      },
-    ],
+    path: "/departments",
+    permissionKey: "departments",
   },
+
+  {
+    label: "Role Permission",
+    icon: FiFileText,
+    path: "/rolepermissions",
+    permissionKey: "role permission",
+  },
+
+  {
+    label: "Assign User",
+    icon: FiFileText,
+    path: "/assignusers",
+    permissionKey: "assign user",
+  },
+
+  // {
+  //   label: "Managment",
+  //   icon: FiFileText,
+  //   path: "/managements",
+  //   permissionKey: "managment",
+  // },
 
   {
     label: "Letter",
     icon: FiFileText,
     path: "/letter",
     permissionKey: "letter",
-  },
-
-  {
-    label: "Mark List",
-    icon: FiFileText,
-    path: "/marklist",
-    permissionKey: "mark list",
   },
 
   {
@@ -147,33 +198,5 @@ export const menuItems = [
     icon: FiFileText,
     path: "/blog",
     permissionKey: "blog",
-  },
-
-  {
-    label: "Roles",
-    icon: FiFileText,
-    path: "/roles",
-    permissionKey: "roles",
-  },
-
-  {
-    label: "Staff",
-    icon: FiFileText,
-    path: "/staffs",
-    permissionKey: "staff",
-  },
-
-  {
-    label: "Role Permission",
-    icon: FiFileText,
-    path: "/rolepermissions",
-    permissionKey: "role permission",
-  },
-
-  {
-    label: "Assign User",
-    icon: FiFileText,
-    path: "/assignusers",
-    permissionKey: "assign user",
   },
 ];

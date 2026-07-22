@@ -14,13 +14,14 @@ import RegisterStudent from "../pages/Student/RegisterStudent";
 import StudentList from "../pages/Student/StudentPage";
 import CoursesPage from "../pages/Course/CoursePage";
 import StudenrtDetail from "../pages/Student/StudentDetail";
+import EditStudent from "../pages/Student/EditStudent";
 
 import EnrollmentsPage from "../pages/Enrolment/EnrolmentsPage";
 
 import AttendancePage from "../pages/Attendance/AttendancePage";
 import AttendanceView from "../pages/Attendance/ViewAttendance";
 
-import MarksPage from "../pages/Marks/MarkList";
+// import MarksPage from "../pages/Marks/MarkList";
 
 import ComplaintsPage from "../pages/Complaint/complaintPage";
 
@@ -31,13 +32,17 @@ import UserDepartmentPage from "../pages/Department/UserDepartmentPage";
 
 import LettersPage from "../pages/Letter/LetterPage";
 import LetterDetailPage from "../pages/Letter/LetterDetailPage";
+import CourseAssignmentPage from "../pages/CourseAssign/CourseAssignmentPage";
 
 import RolePage from "../pages/Role/RolePage";
 import StaffPage from "../pages/Staff/Staffpage";
-import RolePermissionPage from "../pages/RolePermission/RolePermissionPage"
-import AssignUserPage from "../pages/AssignUser/assignUser"
-
+import RolePermissionPage from "../pages/RolePermission/RolePermissionPage";
+import AssignUserPage from "../pages/AssignUser/assignUser";
+import TeachersPage from "../pages/Teacher/TeachersPage";
+import ClassesPage from "../pages/Class/ClassPage";
 import ProtectedRoute from "./ProtectedRoute";
+import MarkListPage from "../pages/Marks/MarkListPage";
+import ViewMarkList from "../pages/Marks/ViewMarkList";
 
 import { AuthContext } from "../contexts/AuthContext";
 
@@ -66,7 +71,7 @@ const AppRoutes = () => {
         <Route
           path="register-student"
           element={
-            <ProtectedRoute permissionKey="add student" >
+            <ProtectedRoute permissionKey="students">
               <RegisterStudent />
             </ProtectedRoute>
           }
@@ -75,8 +80,26 @@ const AppRoutes = () => {
         <Route
           path="view-students"
           element={
-            <ProtectedRoute permissionKey="view students" >
+            <ProtectedRoute permissionKey="students">
               <StudentList />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="teachers"
+          element={
+            <ProtectedRoute permissionKey="teachers">
+              <TeachersPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="classes"
+          element={
+            <ProtectedRoute permissionKey="classes">
+              <ClassesPage />
             </ProtectedRoute>
           }
         />
@@ -91,10 +114,28 @@ const AppRoutes = () => {
         />
 
         <Route
+          path="courseAssignment"
+          element={
+            <ProtectedRoute permissionKey="course-assignments">
+              <CourseAssignmentPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="students/:id"
           element={
-            <ProtectedRoute permissionKey="view students" >
+            <ProtectedRoute permissionKey="students">
               <StudenrtDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/students/edit/:id"
+          element={
+            <ProtectedRoute permissionKey="students">
+              <EditStudent />
             </ProtectedRoute>
           }
         />
@@ -111,7 +152,7 @@ const AppRoutes = () => {
         <Route
           path="take-attendance"
           element={
-            <ProtectedRoute permissionKey="take attendance" >
+            <ProtectedRoute permissionKey="attendance" allowedRoles={["Teacher"]}>
               <AttendancePage />
             </ProtectedRoute>
           }
@@ -120,17 +161,26 @@ const AppRoutes = () => {
         <Route
           path="view-attendance"
           element={
-            <ProtectedRoute permissionKey="view attendance" >
+            <ProtectedRoute permissionKey="attendance" allowedRoles={["Teacher"]}>
               <AttendanceView />
             </ProtectedRoute>
           }
         />
 
         <Route
-          path="marklist"
+          path="fill-marks"
           element={
-            <ProtectedRoute permissionKey="mark list">
-              <MarksPage />
+            <ProtectedRoute permissionKey="marklist" allowedRoles={["Teacher"]}>
+              <MarkListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="view-marks"
+          element={
+            <ProtectedRoute permissionKey="marklist" allowedRoles={["Teacher"]}>
+              <ViewMarkList />
             </ProtectedRoute>
           }
         />
@@ -206,7 +256,7 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="rolepermissions"
           element={

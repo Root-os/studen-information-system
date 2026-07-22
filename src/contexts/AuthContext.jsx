@@ -34,25 +34,26 @@ export const AuthProvider = ({ children }) => {
     return user?.role?.name === "Super Admin";
   };
 
-const hasPermission = (module, action) => {
-  if (!user) return false;
+  const hasPermission = (module, action) => {
+    if (!user) return false;
+    if (isSuperAdmin()) return true;
+    return user?.permissions?.[module]?.[action] === true;
+  };
 
-  if (isSuperAdmin()) return true;
+  const hasModuleAccess = (module) => {
+    if (!user) return false;
+    if (isSuperAdmin()) return true;
+    const permissions = user?.permissions?.[module];
+    if (!permissions) return false;
+    return Object.values(permissions).some(Boolean);
+  };
 
-  return user?.permissions?.[module]?.[action] === true;
-};
-
-const hasModuleAccess = (module) => {
-  if (!user) return false;
-
-  if (isSuperAdmin()) return true;
-
-  const permissions = user?.permissions?.[module];
-
-  if (!permissions) return false;
-
-  return Object.values(permissions).some(Boolean);
-};
+  // Check if the logged-in user has a specific role by name.
+  // user.role is decoded from JWT as { id, name } — so we compare role.name directly.
+  const hasRole = (roleName) => {
+    if (!user) return false;
+    return user?.role?.name?.toLowerCase() === roleName.toLowerCase();
+  };
 
   return (
     <AuthContext.Provider
@@ -63,10 +64,11 @@ const hasModuleAccess = (module) => {
         logout,
         isAuthenticated: !!token,
 
-        // helpers (IMPORTANT)
+        // helpers
         isSuperAdmin,
         hasPermission,
         hasModuleAccess,
+        hasRole,
       }}
     >
       {children}

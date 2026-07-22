@@ -4,6 +4,9 @@ import DataTable from "../../components/ui/simpletable";
 import api from "../../hooks/api";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { useToast } from "../../components/ui/toast";
+import usePagePermission from "../../hooks/userPagePermission";
+import ConfirmModal from "../../components/ui/deleteConfirmationModal";
+import StatusModal from "../../components/ui/successModal";
 
 const RolePage = () => {
   const { theme, currentTheme } = useContext(ThemeContext);
@@ -14,20 +17,33 @@ const RolePage = () => {
   const [editingRole, setEditingRole] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
   });
 
+  const { canCreate, canUpdate, canDelete } = usePagePermission("classes");
+  const [statusModal, setStatusModal] = useState({
+    open: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
+  const showStatus = (type, title, message) => {
+    setStatusModal({ open: true, type, title, message });
+  };
+
   useEffect(() => {
     fetchRoles();
   }, []);
 
-  // ✅ FIXED: correct API response handling
   const fetchRoles = async () => {
     try {
       const res = await api.get("/role");
-      setRoles(res.data.data || []); // 👈 IMPORTANT FIX
+      setRoles(res.data.data || []);
     } catch (err) {
       error("Failed to fetch roles");
     }
@@ -39,10 +55,12 @@ const RolePage = () => {
     try {
       if (editingRole) {
         await api.put(`/role/${editingRole.id}`, formData);
-        success("Role updated successfully");
+        // success("Role updated successfully");
+        showStatus("success", "Updated", "Role updated successfully");
       } else {
         await api.post("/role", formData);
         success("Role created successfully");
+        showStatus("success", "Created", "Role created successfully");
       }
 
       setShowModal(false);
@@ -65,8 +83,13 @@ const RolePage = () => {
 
   const handleDelete = async () => {
     try {
-      await api.delete(`/role/${confirmDelete}`);
-      success("Role deleted successfully");
+      await api.delete(`/role/${selectedRole.id}`);
+      // success("Role deleted successfully");
+      showStatus("success", "Deleted", "Role deleted successfully");
+
+      setDeleteModalOpen(false);
+      setSelectedRole(null);
+
       setConfirmDelete(null);
       fetchRoles();
     } catch (err) {
@@ -87,19 +110,26 @@ const RolePage = () => {
       accessor: "actions",
       render: (row) => (
         <div className="flex gap-2">
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
-          >
-            <FiEdit size={16} />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
+            >
+              <FiEdit size={16} />
+            </button>
+          )}
 
-          <button
-            onClick={() => setConfirmDelete(row.id)}
-            className="p-2 rounded-md hover:bg-red-100 text-red-500"
-          >
-            <FiTrash2 size={16} />
-          </button>
+          {canDelete && (
+            <button
+              onClick={() => {
+                setSelectedRole(row);
+                setDeleteModalOpen(true);
+              }}
+              className="p-2 rounded-md hover:bg-red-100 text-red-500"
+            >
+              <FiTrash2 size={16} />
+            </button>
+          )}
         </div>
       ),
     },
@@ -110,26 +140,25 @@ const RolePage = () => {
 
   return (
     <div className="space-y-6">
-
       {/* Header */}
       <div
         className={`${
           currentTheme === "dark" ? "bg-gray-800" : "bg-white"
         } p-6 rounded-lg shadow flex justify-between`}
       >
-        <h2 className={`text-xl font-bold ${modalText}`}>
-          Roles
-        </h2>
+        <h2 className={`text-xl font-bold ${modalText}`}>Roles</h2>
 
-        <button
-          onClick={() => {
-            setEditingRole(null);
-            setShowModal(true);
-          }}
-          className={`${theme.primary} text-white px-4 py-2 rounded`}
-        >
-          + Add Role
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => {
+              setEditingRole(null);
+              setShowModal(true);
+            }}
+            className={`${theme.primary} text-white px-4 py-2 rounded`}
+          >
+            + Add Role
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -203,40 +232,22 @@ const RolePage = () => {
         </div>
       )}
 
-      {/* DELETE CONFIRMATION */}
-      {confirmDelete && (
-        <div className="fixed inset-0 flex items-center justify-center bg-opacity-40">
-          <div className={`${modalBg} p-6 rounded-lg w-[350px]`}>
-            <h3 className={`text-lg font-semibold mb-3 ${modalText}`}>
-              Delete Role
-            </h3>
+      <ConfirmModal
+        open={deleteModalOpen}
+        title="Delete Class"
+        message="Are you sure you want to delete this class?"
+        // loading={deleting}
+        onCancel={() => setDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+      />
 
-            <p className={`mb-4 text-sm ${modalText}`}>
-              Are you sure you want to delete this role?
-            </p>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setConfirmDelete(null)}
-                className={`${
-                  currentTheme === "dark"
-                    ? "border-gray-600 text-white"
-                    : "border-gray-300 text-gray-900"
-                } px-3 py-2 border rounded`}
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StatusModal
+        open={statusModal.open}
+        type={statusModal.type}
+        title={statusModal.title}
+        message={statusModal.message}
+        onClose={() => setStatusModal((p) => ({ ...p, open: false }))}
+      />
     </div>
   );
 };

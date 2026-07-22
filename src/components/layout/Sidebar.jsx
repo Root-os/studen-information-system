@@ -34,7 +34,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { user, logout, hasPermission, hasModuleAccess } = useContext(AuthContext);
+  const { user, logout, hasPermission, hasModuleAccess, hasRole } = useContext(AuthContext);
 
   const [openFolders, setOpenFolders] = useState({});
 
@@ -57,36 +57,37 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
     navigate("/login");
   };
 
-  // 🔥 NEW PERMISSION-BASED FILTER (MAIN FIX)
-const filteredMenu = useMemo(() => {
-  if (!user) return [];
-  console.log("🔐 USER PERMISSIONS:", user.permissions);
-  console.log("📋 MENU ITEMS:", menuItems.map(m => m.permissionKey));
+  // Filter menu items by permission OR by role bypass (allowedRoles)
+  const filteredMenu = useMemo(() => {
+    if (!user) return [];
 
-  return menuItems
-    .map((item) => {
-      // 🔵 Parent with children (MODULE)
-      if (item.children) {
-        const children = item.children.filter((child) => {
-          if (!child.permissionKey) return true;
+    return menuItems
+      .map((item) => {
+        // Role bypass: if user's role is listed in allowedRoles, always show — no permission check needed
+        const roleAllowed = item.allowedRoles?.some((r) => hasRole(r)) ?? false;
 
-          const action = child.action ?? "view";
+        if (item.children) {
+          // Role bypass → show all children as-is
+          if (roleAllowed) return item;
 
-          return hasPermission(child.permissionKey, action);
-        });
+          // Otherwise filter children by permission
+          const children = item.children.filter((child) => {
+            const action = child.action ?? "view";
+            return hasPermission(item.permissionKey, action);
+          });
+          return children.length > 0 ? { ...item, children } : null;
+        }
 
-        return children.length > 0
-          ? { ...item, children }
-          : null;
-      }
+        // Single item — no permissionKey means always show (e.g. Home)
+        if (!item.permissionKey) return item;
 
-      // 🟢 Single item (MODULE LEVEL ACCESS)
-      if (!item.permissionKey) return item;
+        // Role bypass for single items too
+        if (roleAllowed) return item;
 
-      return hasModuleAccess(item.permissionKey) ? item : null;
-    })
-    .filter(Boolean);
-}, [user, hasPermission, hasModuleAccess]);
+        return hasModuleAccess(item.permissionKey) ? item : null;
+      })
+      .filter(Boolean);
+  }, [user, hasPermission, hasModuleAccess, hasRole]);
 
   useEffect(() => {
     setOpenFolders({});

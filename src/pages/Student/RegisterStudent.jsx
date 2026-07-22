@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { FiUpload } from "react-icons/fi";
+import { FiUpload, FiExternalLink, FiX } from "react-icons/fi";
 import api from "../../hooks/api";
 import { jwtDecode } from "jwt-decode";
 import { AuthContext } from "../../contexts/AuthContext";
@@ -37,13 +37,14 @@ const RegisterStudent = () => {
     approvedDate: today,
     email: "",
     password: "",
-    role: "STUDENT",
+    roleId: "",
   });
 
   const [studentPhoto, setStudentPhoto] = useState(null);
   const [familyPhoto, setFamilyPhoto] = useState(null);
   const [otherDocument, setOtherDocument] = useState(null);
   const [loading, setLoading] = useState(false);
+  // const [roles, setRoles] = useState([]);
 
   // Update approvedBy whenever token becomes available / changes
   useEffect(() => {
@@ -74,6 +75,25 @@ const RegisterStudent = () => {
     }
   }, [token]);
 
+  useEffect(() => {
+const fetchRoles = async () => {
+    const res = await api.get("/role");
+
+    const studentRole = res.data.data.find(
+        role => role.name.toLowerCase() === "student"
+    );
+
+    if (studentRole) {
+        setFormData(prev => ({
+            ...prev,
+            roleId: studentRole.id
+        }));
+    }
+};
+
+    fetchRoles();
+  }, []);
+
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -96,7 +116,7 @@ const RegisterStudent = () => {
       if (familyPhoto) data.append("familyPhoto", familyPhoto);
       if (otherDocument) data.append("otherDocument", otherDocument);
 
-      await api.post("/auth/register", data, {
+      await api.post("/users/register", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -441,16 +461,12 @@ const RegisterStudent = () => {
               <label className="block text-sm font-medium dark:text-gray-300">
                 Role
               </label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="mt-1 border rounded px-3 py-2 w-full dark:bg-gray-800 dark:border-gray-700"
-              >
-                <option value="STUDENT">STUDENT</option>
-                <option value="TEACHER">TEACHER</option>
-                <option value="ADMIN">ADMIN</option>
-              </select>
+
+              <input
+                value="Student"
+                readOnly
+                className="mt-1 border rounded px-3 py-2 w-full bg-gray-100 dark:bg-gray-700"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium dark:text-gray-300">
@@ -500,38 +516,32 @@ const RegisterStudent = () => {
         </section>
 
         {/* File Upload */}
-        <div className="flex gap-6 mt-6">
-          <label className="flex items-center gap-2 border px-4 py-2 rounded cursor-pointer dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-            <FiUpload />
-            Student Photo
-            <input
-              type="file"
-              className="hidden"
+        <section className="p-5 border rounded dark:border-gray-700">
+          <h3 className="text-lg font-semibold mb-4 dark:text-gray-200">Documents</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <FileUpload
+              label="Student Photo"
               accept="image/*"
+              file={studentPhoto}
               onChange={(e) => handleFileChange(e, "student")}
+              onClear={() => setStudentPhoto(null)}
             />
-          </label>
-          <label className="flex items-center gap-2 border px-4 py-2 rounded cursor-pointer dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-            <FiUpload />
-            Family Photo
-            <input
-              type="file"
-              className="hidden"
+            <FileUpload
+              label="Family Photo"
               accept="image/*"
+              file={familyPhoto}
               onChange={(e) => handleFileChange(e, "family")}
+              onClear={() => setFamilyPhoto(null)}
             />
-          </label>
-          <label className="flex items-center gap-2 border px-4 py-2 rounded cursor-pointer dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-            <FiUpload />
-            Other Document
-            <input
-              type="file"
-              className="hidden"
+            <FileUpload
+              label="Other Document"
               accept=".jpg,.jpeg,.png,.pdf"
+              file={otherDocument}
               onChange={(e) => handleFileChange(e, "other")}
+              onClear={() => setOtherDocument(null)}
             />
-          </label>
-        </div>
+          </div>
+        </section>
 
         {/* Submit */}
         <button
@@ -547,3 +557,57 @@ const RegisterStudent = () => {
 };
 
 export default RegisterStudent;
+
+/* ── File upload card (same design as studentForm) ── */
+const FileUpload = ({ label, accept, file, onChange, onClear }) => {
+  const isPdf = (f) => f?.type === "application/pdf" || f?.name?.toLowerCase().endsWith(".pdf");
+  const preview = file ? URL.createObjectURL(file) : null;
+
+  return (
+    <div className="border rounded-lg p-4 dark:border-gray-700 flex flex-col gap-3">
+      {/* Label + upload trigger */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium dark:text-gray-300">{label}</span>
+        <label className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 cursor-pointer hover:underline">
+          <FiUpload size={13} />
+          {file ? "Replace" : "Upload"}
+          <input type="file" hidden accept={accept} onChange={onChange} />
+        </label>
+      </div>
+
+      {/* Preview */}
+      {file ? (
+        <div className="relative">
+          {isPdf(file) ? (
+            <a
+              href={preview}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              <FiExternalLink size={14} />
+              {file.name}
+            </a>
+          ) : (
+            <img
+              src={preview}
+              alt={label}
+              className="w-full h-32 object-cover rounded border dark:border-gray-600"
+            />
+          )}
+          <p className="text-xs text-green-500 mt-1 truncate">📄 {file.name}</p>
+          <button
+            type="button"
+            onClick={onClear}
+            className="absolute top-1 right-1 bg-white dark:bg-gray-800 rounded-full p-0.5 text-gray-500 hover:text-red-500"
+            title="Remove selection"
+          >
+            <FiX size={13} />
+          </button>
+        </div>
+      ) : (
+        <p className="text-xs text-gray-400 text-center py-4">No file selected</p>
+      )}
+    </div>
+  );
+};

@@ -4,15 +4,31 @@ import DataTable from "../../components/ui/simpletable";
 import api from "../../hooks/api";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { useToast } from "../../components/ui/toast";
+import usePagePermission from "../../hooks/userPagePermission";
+import ConfirmModal from "../../components/ui/deleteConfirmationModal";
+import StatusModal from "../../components/ui/successModal";
 
 const StaffPage = () => {
   const { theme, currentTheme } = useContext(ThemeContext);
   const { success, error } = useToast();
-
   const [staff, setStaff] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
+  const { canCreate, canUpdate, canDelete } = usePagePermission("classes");
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+
+  const [statusModal, setStatusModal] = useState({
+    open: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
+  const showStatus = (type, title, message) => {
+    setStatusModal({ open: true, type, title, message });
+  };
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -42,10 +58,12 @@ const StaffPage = () => {
     try {
       if (editingStaff) {
         await api.put(`/staff/${editingStaff.id}`, formData);
-        success("Staff updated successfully");
+        // success("Staff updated successfully");
+        showStatus("success", "Updated", "Staff Updated successfully");
       } else {
         await api.post("/staff", formData);
-        success("Staff created successfully");
+        // success("Staff created successfully");
+        showStatus("success", "Updated", "Class Updated successfully");
       }
 
       setShowModal(false);
@@ -79,7 +97,8 @@ const StaffPage = () => {
   const handleDelete = async () => {
     try {
       await api.delete(`/staff/${confirmDelete}`);
-      success("Staff deleted successfully");
+      // success("Staff deleted successfully");
+      showStatus("success", "Deleted", "Class Deleted successfully");
       setConfirmDelete(null);
       fetchStaff();
     } catch (err) {
@@ -102,19 +121,23 @@ const StaffPage = () => {
       accessor: "actions",
       render: (row) => (
         <div className="flex gap-2">
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
-          >
-            <FiEdit size={16} />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
+            >
+              <FiEdit size={16} />
+            </button>
+          )}
 
-          <button
-            onClick={() => setConfirmDelete(row.id)}
-            className="p-2 rounded-md hover:bg-red-100 text-red-500"
-          >
-            <FiTrash2 size={16} />
-          </button>
+          {canDelete && (
+            <button
+              onClick={() => setConfirmDelete(row.id)}
+              className="p-2 rounded-md hover:bg-red-100 text-red-500"
+            >
+              <FiTrash2 size={16} />
+            </button>
+          )}
         </div>
       ),
     },
@@ -125,26 +148,25 @@ const StaffPage = () => {
 
   return (
     <div className="space-y-6">
-
       {/* HEADER */}
       <div
         className={`${
           currentTheme === "dark" ? "bg-gray-800" : "bg-white"
         } p-6 rounded-lg shadow flex justify-between`}
       >
-        <h2 className={`text-xl font-bold ${modalText}`}>
-          Staff Users
-        </h2>
+        <h2 className={`text-xl font-bold ${modalText}`}>Staff Users</h2>
 
-        <button
-          onClick={() => {
-            setEditingStaff(null);
-            setShowModal(true);
-          }}
-          className={`${theme.primary} text-white px-4 py-2 rounded`}
-        >
-          + Add Staff
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => {
+              setEditingStaff(null);
+              setShowModal(true);
+            }}
+            className={`${theme.primary} text-white px-4 py-2 rounded`}
+          >
+            + Add Staff
+          </button>
+        )}
       </div>
 
       {/* TABLE */}
@@ -165,7 +187,6 @@ const StaffPage = () => {
             </h3>
 
             <form onSubmit={handleSubmit} className="space-y-3">
-
               <input
                 placeholder="Full Name"
                 className={`${
@@ -257,7 +278,6 @@ const StaffPage = () => {
                   {editingStaff ? "Update" : "Create"}
                 </button>
               </div>
-
             </form>
           </div>
         </div>
@@ -298,6 +318,22 @@ const StaffPage = () => {
         </div>
       )}
 
+      <ConfirmModal
+        open={deleteModalOpen}
+        title="Delete Class"
+        message="Are you sure you want to delete this class?"
+        // loading={deleting}
+        onCancel={() => setDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+      />
+
+      <StatusModal
+        open={statusModal.open}
+        type={statusModal.type}
+        title={statusModal.title}
+        message={statusModal.message}
+        onClose={() => setStatusModal((p) => ({ ...p, open: false }))}
+      />
     </div>
   );
 };
