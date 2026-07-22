@@ -136,7 +136,18 @@ exports.createAttendance = async (req, res) => {
 
 exports.getAllAttendance = async (req, res) => {
   try {
+    const user = req.user;
+
+    // If the logged-in user is a teacher, scope to their own records only
+    const whereAttendance = {};
+    if (user?.role?.name?.toLowerCase() === "teacher") {
+      whereAttendance.takenBy = user.id;
+    } else if (req.query.takenBy) {
+      whereAttendance.takenBy = req.query.takenBy;
+    }
+
     const attendance = await Attendance.findAll({
+      where: whereAttendance,
       include: [
         {
           model: CourseAssignment,

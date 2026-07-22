@@ -7,6 +7,8 @@ router.post("/", controller.createCourseAssignment);
 
 router.get("/", controller.getAllCourseAssignments);
 
+router.get("/teacher/:teacherId", controller.getAssignmentsByTeacher);
+
 router.get("/:id", controller.getCourseAssignmentById);
 
 router.put("/:id", controller.updateCourseAssignment);

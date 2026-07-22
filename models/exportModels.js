@@ -1,7 +1,7 @@
 const User = require('./user');
 const Course = require('./courses');
 const StudentCourse = require('./studentCourse');
-const MarkList = require('./marklist');
+// const MarkList = require('./marklist');
 const Attendance = require('./attendance');
 const Complain = require('./complain');
 const Punishment = require('./punishment');
@@ -25,7 +25,7 @@ module.exports = {
   User,
   Course,
   StudentCourse,
-  MarkList,
+  // MarkList,
   Attendance,
   Complain,
   Punishment,

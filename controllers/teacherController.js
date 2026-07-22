@@ -1,11 +1,12 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { Teacher, AssignUser, Role, RolePermission } = require("../models");
+const { Op } = require("sequelize");
+const { Teacher, Role, RolePermission } = require("../models");
 
 // Create Teacher
 exports.createTeacher = async (req, res) => {
   try {
-    const { fullName, phone, userName, password } = req.body;
+    const { fullName, phone, userName, password, roleId } = req.body;
 
     const existingUser = await Teacher.findOne({
       where: { userName },
@@ -17,6 +18,17 @@ exports.createTeacher = async (req, res) => {
       });
     }
 
+    // Resolve roleId: use provided one, or find/create the TEACHER role
+    let resolvedRoleId = roleId || null;
+
+    if (!resolvedRoleId) {
+      const [teacherRole] = await Role.findOrCreate({
+        where: { name: { [Op.like]: "teacher" } },
+        defaults: { name: "TEACHER", description: "Teacher" },
+      });
+      resolvedRoleId = teacherRole.id;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const teacher = await Teacher.create({
@@ -24,11 +36,17 @@ exports.createTeacher = async (req, res) => {
       phone,
       userName,
       password: hashedPassword,
+      roleId: resolvedRoleId,
+    });
+
+    const teacherWithRole = await Teacher.findByPk(teacher.id, {
+      attributes: { exclude: ["password"] },
+      include: [{ model: Role, as: "role" }],
     });
 
     res.status(201).json({
       message: "Teacher created successfully",
-      data: teacher,
+      data: teacherWithRole,
     });
   } catch (error) {
     res.status(500).json({
@@ -42,6 +60,7 @@ exports.getAllTeachers = async (req, res) => {
   try {
     const teachers = await Teacher.findAll({
       attributes: { exclude: ["password"] },
+      include: [{ model: Role, as: "role" }],
     });
 
     res.status(200).json(teachers);
@@ -57,6 +76,7 @@ exports.getTeacherById = async (req, res) => {
   try {
     const teacher = await Teacher.findByPk(req.params.id, {
       attributes: { exclude: ["password"] },
+      include: [{ model: Role, as: "role" }],
     });
 
     if (!teacher) {
@@ -76,7 +96,7 @@ exports.getTeacherById = async (req, res) => {
 // Update Teacher
 exports.updateTeacher = async (req, res) => {
   try {
-    const { fullName, phone, userName } = req.body;
+    const { fullName, phone, userName, roleId } = req.body;
 
     const teacher = await Teacher.findByPk(req.params.id);
 
@@ -90,11 +110,17 @@ exports.updateTeacher = async (req, res) => {
       fullName,
       phone,
       userName,
+      ...(roleId !== undefined && { roleId }),
+    });
+
+    const updatedTeacher = await Teacher.findByPk(teacher.id, {
+      attributes: { exclude: ["password"] },
+      include: [{ model: Role, as: "role" }],
     });
 
     res.status(200).json({
       message: "Teacher updated successfully",
-      data: teacher,
+      data: updatedTeacher,
     });
   } catch (error) {
     res.status(500).json({
@@ -138,31 +164,6 @@ exports.loginTeacher = async (req, res) => {
 
     const teacher = await Teacher.findOne({
       where: { userName },
-    });
-
-    if (!teacher) {
-      return res.status(401).json({
-        message: "Invalid username or password",
-      });
-    }
-
-    const isMatch = await bcrypt.compare(
-      password,
-      teacher.password
-    );
-
-    if (!isMatch) {
-      return res.status(401).json({
-        message: "Invalid username or password",
-      });
-    }
-
-    // Get assigned role and permissions
-    const assignedUser = await AssignUser.findOne({
-      where: {
-        teacherId: teacher.id,
-        isActive: true,
-      },
       include: [
         {
           model: Role,
@@ -177,13 +178,26 @@ exports.loginTeacher = async (req, res) => {
       ],
     });
 
-    const role = assignedUser?.role || null;
+    if (!teacher) {
+      return res.status(401).json({
+        message: "Invalid username or password",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, teacher.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Invalid username or password",
+      });
+    }
+
+    const role = teacher.role || null;
 
     const rawPermissions =
-      assignedUser?.role?.rolePermissions?.[0]?.permissions || {};
+      role?.rolePermissions?.[0]?.permissions || {};
 
     let permissions = {};
-
     try {
       permissions =
         typeof rawPermissions === "string"

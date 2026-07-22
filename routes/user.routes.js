@@ -15,6 +15,7 @@ router.post(
   upload.fields([
     { name: "studentPhoto", maxCount: 1 },
     { name: "familyPhoto", maxCount: 1 },
+    { name: "otherDocument", maxCount: 1 },
   ]),
   userController.registerUser,
 );
@@ -24,6 +25,7 @@ router.put(
   upload.fields([
     { name: "studentPhoto", maxCount: 1 },
     { name: "familyPhoto", maxCount: 1 },
+    { name: "otherDocument", maxCount: 1 },
   ]),
   validate(updateUserSchema),
   userController.updateCurrentUser,
@@ -36,6 +38,7 @@ router.put(
   upload.fields([
     { name: "studentPhoto", maxCount: 1 },
     { name: "familyPhoto", maxCount: 1 },
+    { name: "otherDocument", maxCount: 1 },
   ]),
   userController.updateStudent,
 );

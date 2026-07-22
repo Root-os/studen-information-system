@@ -1,7 +1,7 @@
 const User = require('./user');
 const Course = require('./courses');
 const StudentCourse = require('./studentCourse');
-const MarkList = require('./marklist');
+// const MarkList = require('./marklist');
 const Attendance = require('./attendance');
 const Complain = require('./complain');
 const Punishment = require('./punishment');
@@ -23,6 +23,8 @@ const Enrollment = require('./enrollment');
 const AcademicYear = require('./academicYear');
 const Class = require('./class');
 const AttendanceDetail = require('./attendanceDetail');
+const MarkList = require('./mark');
+const MarkDetail = require('./markDetail');
 
   // User Associations
   User.hasMany(StudentCourse, {
@@ -56,34 +58,34 @@ const AttendanceDetail = require('./attendanceDetail');
     onUpdate: 'CASCADE'
   });
 
-  Course.hasMany(MarkList, {
-    foreignKey: 'courseId',
-    as: 'marks',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
-  });
+  // Course.hasMany(MarkList, {
+  //   foreignKey: 'courseId',
+  //   as: 'marks',
+  //   onDelete: 'CASCADE',
+  //   onUpdate: 'CASCADE'
+  // });
 
   // MarkList Associations
-  MarkList.belongsTo(User, {
-    foreignKey: 'studentId',
-    as: 'student',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
-  });
+  // MarkList.belongsTo(User, {
+  //   foreignKey: 'studentId',
+  //   as: 'student',
+  //   onDelete: 'CASCADE',
+  //   onUpdate: 'CASCADE'
+  // });
 
-  MarkList.belongsTo(User, {
-    foreignKey: 'teacherId',
-    as: 'teacher',
-    onDelete: 'SET NULL',
-    onUpdate: 'CASCADE'
-  });
+  // MarkList.belongsTo(User, {
+  //   foreignKey: 'teacherId',
+  //   as: 'teacher',
+  //   onDelete: 'SET NULL',
+  //   onUpdate: 'CASCADE'
+  // });
 
-  MarkList.belongsTo(Course, {
-    foreignKey: 'courseId',
-    as: 'course',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
-  });
+  // MarkList.belongsTo(Course, {
+  //   foreignKey: 'courseId',
+  //   as: 'course',
+  //   onDelete: 'CASCADE',
+  //   onUpdate: 'CASCADE'
+  // });
 
   // Attendance Associations
   Attendance.belongsTo(User, {
@@ -101,12 +103,12 @@ const AttendanceDetail = require('./attendanceDetail');
   });
 
   // User's hasMany relationships
-  User.hasMany(MarkList, {
-    foreignKey: 'studentId',
-    as: 'marks',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
-  });
+  // User.hasMany(MarkList, {
+  //   foreignKey: 'studentId',
+  //   as: 'marks',
+  //   onDelete: 'CASCADE',
+  //   onUpdate: 'CASCADE'
+  // });
 
   User.hasMany(Attendance, {
     foreignKey: 'studentId',
@@ -406,6 +408,16 @@ Role.hasMany(User, {
   foreignKey: "roleId",
   // as: "users",
 });
+
+Teacher.belongsTo(Role, {
+  foreignKey: "roleId",
+  as: "role",
+});
+
+Role.hasMany(Teacher, {
+  foreignKey: "roleId",
+  as: "teachers",
+});
 //===========================================================================================================
 // Student -> Enrollment
 User.hasMany(Enrollment, {
@@ -510,16 +522,49 @@ AttendanceDetail.belongsTo(Enrollment, {
   // as: "enrollment",
 });
 
-// Teacher.js
+// Teacher wiz attendance
 Teacher.hasMany(Attendance, {
   foreignKey: "takenBy",
   // as: "attendances",
 });
 
-// Attendance.js
+
 Attendance.belongsTo(Teacher, {
   foreignKey: "takenBy",
   // as: "teacher",
+});
+
+// CourseAssignment -> MarkList
+CourseAssignment.hasMany(MarkList, {
+  foreignKey: "courseAssignmentId",
+  // as: "markLists",
+});
+
+MarkList.belongsTo(CourseAssignment, {
+  foreignKey: "courseAssignmentId",
+  // as: "courseAssignment",
+});
+
+
+// MarkList -> MarkDetail
+MarkList.hasMany(MarkDetail, {
+  foreignKey: "markListId",
+});
+
+MarkDetail.belongsTo(MarkList, {
+  foreignKey: "markListId",
+  // as: "markList",
+});
+
+
+// Enrollment -> MarkDetail
+Enrollment.hasMany(MarkDetail, {
+  foreignKey: "enrollmentId",
+});
+
+MarkDetail.belongsTo(Enrollment, {
+  foreignKey: "enrollmentId",
+  // as: "student",
 });
 
 
@@ -529,7 +574,7 @@ module.exports = {
   User,
   Course,
   StudentCourse,
-  MarkList,
+  // MarkList,
   Attendance,
   Complain,
   Punishment,

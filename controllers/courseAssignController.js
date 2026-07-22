@@ -259,6 +259,34 @@ exports.deleteCourseAssignment = async (req, res) => {
   }
 };
 
+exports.getAssignmentsByTeacher = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+
+    const assignments = await CourseAssignment.findAll({
+      where: { teacherId },
+      include: [
+        { model: Course, as: "course" },
+        { model: Teacher, as: "teacher" },
+        { model: Class, as: "class" },
+        { model: AcademicYear, as: "academicYear" },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: assignments.length,
+      data: assignments,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 exports.getTeachersByClass = async (req, res) => {
   try {
     const { classId } = req.params;

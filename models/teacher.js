@@ -24,6 +24,10 @@ const Teacher = sequelize.define("Teacher", {
     type: DataTypes.STRING,
     allowNull: false,
  },
+ roleId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+ },
 
 },
 {
