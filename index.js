@@ -48,10 +48,8 @@ const startServer = async () => {
     logger.info('Database connection established successfully.');
 
     // Sync models with database (use { force: true } in development to drop tables)
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: false });
-      logger.info('Database synchronized with models.');
-    }
+ await sequelize.sync({ alter: false });
+logger.info('Database synchronized with models.');
 
     // await seedDatabase();
 
