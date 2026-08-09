@@ -140,6 +140,7 @@ exports.staffLogin = async (req, res) => {
     const token = jwt.sign(
       {
         id: user.id,
+        fullName: user.fullName,
         userName: user.userName,
         role: role
           ? {

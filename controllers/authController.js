@@ -1,4 +1,4 @@
-const { User, StaffUser, Teacher, Role } = require("../models");
+const { User, Role } = require("../models");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -12,22 +12,16 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Find account by email
-    let account = await User.findOne({
+    // Find account by email (include Role so we can embed it in the JWT)
+    const account = await User.findOne({
       where: { email },
       include: [
         {
           model: Role,
-          // as: "role",
           attributes: ["id", "name"],
         },
       ],
     });
-
-    // If not found in User, check Admin (optional)
-    if (!account) {
-      account = await Admin.findOne({ email });
-    }
 
     if (!account) {
       return res.status(404).json({
@@ -44,16 +38,20 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate JWT
+    // Generate JWT — embed role as an object { id, name } so the UI's
+    // isSuperAdmin() check (user?.role?.name === "Super Admin") works correctly
+    // after jwtDecode(token) is stored as the user in AuthContext.
     const token = jwt.sign(
       {
         id: account.id,
         email: account.email,
-        roleId: account.roleId,
-        role: account.role?.name,
         fullName: account.fullName,
+        roleId: account.roleId,
+        role: account.Role
+          ? { id: account.Role.id, name: account.Role.name }
+          : null,
       },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || "secretkey",
       {
         expiresIn: "7d",
       },
@@ -62,12 +60,6 @@ exports.login = async (req, res) => {
     return res.status(200).json({
       message: "Login successful.",
       token,
-      // user: {
-      //   id: account._id,
-      //   name: account.name,
-      //   email: account.email,
-      //   role: account.role,
-      // },
     });
   } catch (error) {
     console.error(error);

@@ -284,12 +284,18 @@ exports.updateCurrentUser = async (req, res) => {
 
     if (req.files?.studentPhoto) {
       // Delete old photo
-      if (studentPhoto) fs.unlinkSync(path.join("uploads", studentPhoto));
+      if (studentPhoto) {
+        const oldPath = path.join("uploads/user", studentPhoto);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
       studentPhoto = req.files.studentPhoto[0].filename;
     }
 
     if (req.files?.familyPhoto) {
-      if (familyPhoto) fs.unlinkSync(path.join("uploads", familyPhoto));
+      if (familyPhoto) {
+        const oldPath = path.join("uploads/user", familyPhoto);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
       familyPhoto = req.files.familyPhoto[0].filename;
     }
 

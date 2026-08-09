@@ -4,7 +4,7 @@ exports.createBlogSchema = {
   body: Joi.object({
     blogDetail: Joi.string().min(3).required(),
     date: Joi.date().required(),
-    image: Joi.string().uri().allow('', null),
+    image: Joi.string().allow('', null),
   }),
 };
 
@@ -13,7 +13,7 @@ exports.updateBlogSchema = {
   body: Joi.object({
     blogDetail: Joi.string().min(3),
     date: Joi.date(),
-    image: Joi.string().uri().allow('', null),
+    image: Joi.string().allow('', null),
   }),
 };
 

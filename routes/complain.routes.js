@@ -1,31 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const complainController = require('../controllers/complain.controller');
+const c = require('../controllers/complain.controller');
 const { validate } = require('../middleware/validation');
-const { createComplaintSchema, updateComplaintSchema, updateComplaintStatusSchema, idParam } = require('../validations/complain.validation');
+const {
+  createComplaintSchema,
+  updateComplaintSchema,
+  updateComplaintStatusSchema,
+  idParam,
+} = require('../validations/complain.validation');
 
-// List complaints
-router.get('/', complainController.getAllComplaints);
+// ── Stats & lookup (before /:id so they don't get swallowed) ──────────────────
+router.get('/stats/summary',       c.getComplaintStats);
+router.get('/lookup/respondants',  c.lookupRespondants);
 
-// My complaints
-router.get('/me', complainController.getMyComplaints);
+// ── Track by party ID ─────────────────────────────────────────────────────────
+// ?type=student|teacher
+router.get('/track/complainant/:id', c.trackByComplainant);
+router.get('/track/respondant/:id',  c.trackByRespondant);
 
-// Stats
-router.get('/stats/summary', complainController.getComplaintStats);
+// ── CRUD ──────────────────────────────────────────────────────────────────────
+router.get('/',   c.getAllComplaints);
+router.post('/',  validate(createComplaintSchema), c.createComplaint);
 
-// Create
-router.post('/', validate(createComplaintSchema), complainController.createComplaint);
-
-// Read
-router.get('/:id', validate(idParam), complainController.getComplaintById);
-
-// Update
-router.put('/:id', validate(updateComplaintSchema), complainController.updateComplaint);
-
-// Update status
-router.patch('/:id/status', validate(updateComplaintStatusSchema), complainController.updateComplaintStatus);
-
-// Delete
-router.delete('/:id', validate(idParam), complainController.deleteComplaint);
+router.get('/:id',          validate(idParam), c.getComplaintById);
+router.put('/:id',          validate(updateComplaintSchema), c.updateComplaint);
+router.patch('/:id/status', validate(updateComplaintStatusSchema), c.updateComplaintStatus);
+router.delete('/:id',       validate(idParam), c.deleteComplaint);
 
 module.exports = router;

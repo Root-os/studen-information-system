@@ -117,33 +117,73 @@ const MarkDetail = require('./markDetail');
     onUpdate: 'CASCADE'
   });
 
-  // Complain Associations
+  // ── Complain Associations ────────────────────────────────────────────────────
+  // complainant is either a User (student) or a Teacher — polymorphic via constraints:false
   Complain.belongsTo(User, {
     foreignKey: 'complainant',
-    as: 'complainantUser',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
+    as: 'complainantStudent',
+    constraints: false,
+  });
+  Complain.belongsTo(Teacher, {
+    foreignKey: 'complainant',
+    as: 'complainantTeacher',
+    constraints: false,
   });
 
+  // respondant is either a User (student) or a Teacher
   Complain.belongsTo(User, {
     foreignKey: 'respondant',
-    as: 'respondentUser',
-    onDelete: 'SET NULL',
-    onUpdate: 'CASCADE'
+    as: 'respondantStudent',
+    constraints: false,
+  });
+  Complain.belongsTo(Teacher, {
+    foreignKey: 'respondant',
+    as: 'respondantTeacher',
+    constraints: false,
   });
 
+  // Class context
+  Complain.belongsTo(Class, {
+    foreignKey: 'classId',
+    as: 'complainClass',
+  });
+  Class.hasMany(Complain, {
+    foreignKey: 'classId',
+    as: 'complaints',
+  });
+
+  // Academic year context
+  Complain.belongsTo(AcademicYear, {
+    foreignKey: 'academicYearId',
+    as: 'complainAcademicYear',
+  });
+  AcademicYear.hasMany(Complain, {
+    foreignKey: 'academicYearId',
+    as: 'complaints',
+  });
+
+  // Reverse — student filed / had filed against them
   User.hasMany(Complain, {
     foreignKey: 'complainant',
     as: 'filedComplaints',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
+    constraints: false,
   });
-
   User.hasMany(Complain, {
     foreignKey: 'respondant',
     as: 'respondedComplaints',
-    onDelete: 'SET NULL',
-    onUpdate: 'CASCADE'
+    constraints: false,
+  });
+
+  // Reverse — teacher filed / had filed against them
+  Teacher.hasMany(Complain, {
+    foreignKey: 'complainant',
+    as: 'teacherFiledComplaints',
+    constraints: false,
+  });
+  Teacher.hasMany(Complain, {
+    foreignKey: 'respondant',
+    as: 'teacherRespondedComplaints',
+    constraints: false,
   });
 
   // Punishment Associations
@@ -569,12 +609,10 @@ MarkDetail.belongsTo(Enrollment, {
 
 
 module.exports = {
-
   sequelize,
   User,
   Course,
   StudentCourse,
-  // MarkList,
   Attendance,
   Complain,
   Punishment,
@@ -594,5 +632,7 @@ module.exports = {
   AcademicYear,
   AttendanceDetail,
   CourseAssignment,
-  
+  Enrollment,
+  MarkList,
+  MarkDetail,
 };

@@ -1,197 +1,406 @@
-const { Complain, User, sequelize } = require('../models');
+const {
+  Complain,
+  User,
+  Teacher,
+  Class,
+  AcademicYear,
+  Enrollment,
+  CourseAssignment,
+  sequelize,
+} = require('../models');
 const { Op } = require('sequelize');
 
-// Create a complaint
+
+function complainIncludes() {
+  return [
+    {
+      model: User,
+      as: 'complainantStudent',
+      attributes: ['id', 'fullName', 'studentId'],
+      required: false,
+    },
+    {
+      model: Teacher,
+      as: 'complainantTeacher',
+      attributes: ['id', 'fullName', 'userName'],
+      required: false,
+    },
+    {
+      model: User,
+      as: 'respondantStudent',
+      attributes: ['id', 'fullName', 'studentId'],
+      required: false,
+    },
+    {
+      model: Teacher,
+      as: 'respondantTeacher',
+      attributes: ['id', 'fullName', 'userName'],
+      required: false,
+    },
+    {
+      model: Class,
+      as: 'complainClass',
+      attributes: ['id', 'className'],
+      required: false,
+    },
+    {
+      model: AcademicYear,
+      as: 'complainAcademicYear',
+      attributes: ['id', 'yearName'],
+      required: false,
+    },
+  ];
+}
+
+// ─── Membership checks ────────────────────────────────────────────────────────
+
+async function teacherAssignedToClass(teacherId, classId, academicYearId, transaction) {
+  const row = await CourseAssignment.findOne({
+    where: { teacherId, classId, academicYearId },
+    transaction,
+  });
+  return !!row;
+}
+
+async function studentEnrolledInClass(studentId, classId, academicYearId, transaction) {
+  const row = await Enrollment.findOne({
+    where: { studentId, classId, academicYearId, status: 'ACTIVE' },
+    transaction,
+  });
+  return !!row;
+}
+
+// ─── Create ───────────────────────────────────────────────────────────────────
+
 exports.createComplaint = async (req, res) => {
   const transaction = await sequelize.transaction();
-
   try {
-    const { complainant, respondant, complaint } = req.body;
+    const {
+      complainant,
+      complainantType,
+      respondant,
+      respondantType,
+      classId,
+      academicYearId,
+      complaint,
+    } = req.body;
 
-    // 1️⃣ Basic required fields check
-    if (!complainant || !respondant || !complaint) {
+    // Prevent self-complaint
+    if (complainant === respondant && complainantType === respondantType) {
       await transaction.rollback();
-      return res.status(400).json({
-        message: "complainant, respondant and complaint are required",
-      });
+      return res.status(400).json({ message: 'Complainant and respondant cannot be the same person.' });
     }
 
-    // 2️⃣ Prevent same user for complainant and respondent
-    if (complainant === respondant) {
+    // Only valid flows: teacher→student, student→teacher, student→student
+    let category;
+    if (complainantType === 'teacher' && respondantType === 'student') {
+      category = 'teacher_to_student';
+    } else if (complainantType === 'student' && respondantType === 'teacher') {
+      category = 'student_to_teacher';
+    } else if (complainantType === 'student' && respondantType === 'student') {
+      category = 'student_to_student';
+    } else {
       await transaction.rollback();
-      return res.status(400).json({
-        message: "Complainant and respondent cannot be the same user",
-      });
+      return res.status(400).json({ message: 'A teacher cannot file a complaint against another teacher.' });
     }
 
-    // 3️⃣ Check if users exist
-    const complainantUser = await User.findByPk(complainant, { transaction });
-    const respondentUser = await User.findByPk(respondant, { transaction });
-
-    if (!complainantUser || !respondentUser) {
+    // Verify class exists
+    const classRecord = await Class.findByPk(classId, { transaction });
+    if (!classRecord) {
       await transaction.rollback();
-      return res.status(404).json({
-        message: "Complainant or respondent not found",
-      });
+      return res.status(404).json({ message: 'Class not found.' });
     }
 
-    // 4️⃣ Create complaint
+    // Verify academic year exists
+    const yearRecord = await AcademicYear.findByPk(academicYearId, { transaction });
+    if (!yearRecord) {
+      await transaction.rollback();
+      return res.status(404).json({ message: 'Academic year not found.' });
+    }
+
+    // Validate complainant membership
+    if (complainantType === 'teacher') {
+      const ok = await teacherAssignedToClass(complainant, classId, academicYearId, transaction);
+      if (!ok) {
+        await transaction.rollback();
+        return res.status(400).json({
+          message: 'The teacher filing this complaint is not assigned to the specified class and academic year.',
+        });
+      }
+    } else {
+      const ok = await studentEnrolledInClass(complainant, classId, academicYearId, transaction);
+      if (!ok) {
+        await transaction.rollback();
+        return res.status(400).json({
+          message: 'The student filing this complaint is not actively enrolled in the specified class and academic year.',
+        });
+      }
+    }
+
+    // Validate respondant membership
+    if (respondantType === 'teacher') {
+      const ok = await teacherAssignedToClass(respondant, classId, academicYearId, transaction);
+      if (!ok) {
+        await transaction.rollback();
+        return res.status(400).json({
+          message: 'The teacher being complained about is not assigned to the specified class and academic year.',
+        });
+      }
+    } else {
+      const ok = await studentEnrolledInClass(respondant, classId, academicYearId, transaction);
+      if (!ok) {
+        await transaction.rollback();
+        return res.status(400).json({
+          message: 'The student being complained about is not actively enrolled in the specified class and academic year.',
+        });
+      }
+    }
+
     const record = await Complain.create(
-      {
-        complainant,
-        respondant,
-        complaint,
-      },
+      { complainant, complainantType, respondant, respondantType, classId, academicYearId, category, complaint },
       { transaction }
     );
 
     await transaction.commit();
 
-    res.status(201).json(record);
-  } catch (error) {
+    const result = await Complain.findByPk(record.id, { include: complainIncludes() });
+    return res.status(201).json(result);
+  } catch (err) {
     await transaction.rollback();
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: err.message });
   }
 };
 
-// List complaints with filters
+// ─── List all (with filters) ──────────────────────────────────────────────────
+
 exports.getAllComplaints = async (req, res) => {
   try {
-    const { status, complainant, respondant, q, from, to } = req.query;
+    const { status, category, classId, academicYearId, q, from, to } = req.query;
     const where = {};
-    if (status) where.status = status;
-    if (complainant) where.complainant = complainant;
-    if (respondant) where.respondant = respondant;
-    if (q) where.complaint = { [Op.iLike || Op.substring]: `%${q}%` };
+
+    if (status)         where.status         = status;
+    if (category)       where.category       = category;
+    if (classId)        where.classId        = classId;
+    if (academicYearId) where.academicYearId = academicYearId;
+
+    if (q) where.complaint = { [Op.like]: `%${q}%` };
+
     if (from || to) {
       where.createdAt = {};
       if (from) where.createdAt[Op.gte] = new Date(from);
-      if (to) where.createdAt[Op.lte] = new Date(to);
+      if (to)   where.createdAt[Op.lte] = new Date(to);
     }
 
     const items = await Complain.findAll({
       where,
-      include: [
-        { model: User, as: 'complainantUser', attributes: ['id', 'fullName', 'email', 'role'] },
-        { model: User, as: 'respondentUser', attributes: ['id', 'fullName', 'email', 'role'] }
-      ],
-      order: [['createdAt', 'DESC']]
+      include: complainIncludes(),
+      order: [['createdAt', 'DESC']],
     });
-    res.status(200).json(items);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    return res.status(200).json(items);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };
 
-// Get complaint by id
+// ─── Get by ID ────────────────────────────────────────────────────────────────
+
 exports.getComplaintById = async (req, res) => {
   try {
-    const item = await Complain.findByPk(req.params.id, {
-      include: [
-        { model: User, as: 'complainantUser', attributes: ['id', 'fullName', 'email'] },
-        { model: User, as: 'respondentUser', attributes: ['id', 'fullName', 'email'] }
-      ]
-    });
-    if (!item) return res.status(404).json({ message: 'Complaint not found' });
-    res.status(200).json(item);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    const item = await Complain.findByPk(req.params.id, { include: complainIncludes() });
+    if (!item) return res.status(404).json({ message: 'Complaint not found.' });
+    return res.status(200).json(item);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };
 
-// Update complaint (complainant can edit before processed)
+// ─── Track: complaints filed BY a party ──────────────────────────────────────
+// GET /complaints/track/complainant/:id?type=student|teacher
+
+exports.trackByComplainant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.query;
+
+    if (!type || !['student', 'teacher'].includes(type)) {
+      return res.status(400).json({ message: "Query param 'type' must be 'student' or 'teacher'." });
+    }
+
+    const items = await Complain.findAll({
+      where: { complainant: id, complainantType: type },
+      include: complainIncludes(),
+      order: [['createdAt', 'DESC']],
+    });
+
+    return res.status(200).json(items);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// ─── Track: complaints filed AGAINST a party ─────────────────────────────────
+// GET /complaints/track/respondant/:id?type=student|teacher
+
+exports.trackByRespondant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.query;
+
+    if (!type || !['student', 'teacher'].includes(type)) {
+      return res.status(400).json({ message: "Query param 'type' must be 'student' or 'teacher'." });
+    }
+
+    const items = await Complain.findAll({
+      where: { respondant: id, respondantType: type },
+      include: complainIncludes(),
+      order: [['createdAt', 'DESC']],
+    });
+
+    return res.status(200).json(items);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// ─── Update complaint text (pending only) ────────────────────────────────────
+
 exports.updateComplaint = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
     const item = await Complain.findByPk(req.params.id, { transaction });
     if (!item) {
       await transaction.rollback();
-      return res.status(404).json({ message: 'Complaint not found' });
+      return res.status(404).json({ message: 'Complaint not found.' });
     }
-
     if (item.status !== 'pending') {
       await transaction.rollback();
-      return res.status(400).json({ message: 'Only pending complaints can be edited' });
+      return res.status(400).json({ message: 'Only pending complaints can be edited.' });
     }
 
-    const { complaint } = req.body;
-    await item.update({ complaint }, { transaction });
+    await item.update({ complaint: req.body.complaint }, { transaction });
     await transaction.commit();
-    res.status(200).json(item);
-  } catch (error) {
+
+    const result = await Complain.findByPk(item.id, { include: complainIncludes() });
+    return res.status(200).json(result);
+  } catch (err) {
     await transaction.rollback();
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: err.message });
   }
 };
 
-// Update complaint status (admin or respondent)
+// ─── Update status (admin) ────────────────────────────────────────────────────
+
 exports.updateComplaintStatus = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
-    const { status, resolutionNotes } = req.body; // statuses: pending, in_progress, resolved, rejected
+    const { status, resolutionNotes } = req.body;
     const item = await Complain.findByPk(req.params.id, { transaction });
     if (!item) {
       await transaction.rollback();
-      return res.status(404).json({ message: 'Complaint not found' });
+      return res.status(404).json({ message: 'Complaint not found.' });
     }
 
     await item.update({ status, resolutionNotes }, { transaction });
     await transaction.commit();
-    res.status(200).json(item);
-  } catch (error) {
+
+    const result = await Complain.findByPk(item.id, { include: complainIncludes() });
+    return res.status(200).json(result);
+  } catch (err) {
     await transaction.rollback();
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: err.message });
   }
 };
 
-// Delete complaint
+// ─── Delete ───────────────────────────────────────────────────────────────────
+
 exports.deleteComplaint = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
     const item = await Complain.findByPk(req.params.id, { transaction });
     if (!item) {
       await transaction.rollback();
-      return res.status(404).json({ message: 'Complaint not found' });
+      return res.status(404).json({ message: 'Complaint not found.' });
     }
     await item.destroy({ transaction });
     await transaction.commit();
-    res.status(204).send();
-  } catch (error) {
+    return res.status(204).send();
+  } catch (err) {
     await transaction.rollback();
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: err.message });
   }
 };
 
-// Get my complaints (for the logged-in user)
-exports.getMyComplaints = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const items = await Complain.findAll({
-      where: { complainant: userId },
-      order: [['createdAt', 'DESC']]
-    });
-    res.status(200).json(items);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+// ─── Stats summary ────────────────────────────────────────────────────────────
 
-// Complaint stats
 exports.getComplaintStats = async (req, res) => {
   try {
-    const counts = await Promise.all([
+    const [total, pending, in_progress, resolved, rejected] = await Promise.all([
+      Complain.count(),
       Complain.count({ where: { status: 'pending' } }),
       Complain.count({ where: { status: 'in_progress' } }),
       Complain.count({ where: { status: 'resolved' } }),
-      Complain.count({ where: { status: 'rejected' } })
+      Complain.count({ where: { status: 'rejected' } }),
     ]);
-    res.status(200).json({
-      pending: counts[0],
-      in_progress: counts[1],
-      resolved: counts[2],
-      rejected: counts[3]
+
+    const byCategory = await Complain.findAll({
+      attributes: ['category', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+      group: ['category'],
+      raw: true,
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    return res.status(200).json({ total, pending, in_progress, resolved, rejected, byCategory });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// ─── Lookup valid respondants ─────────────────────────────────────────────────
+// GET /complaints/lookup/respondants?complainantId=&complainantType=&classId=&academicYearId=
+// Returns students and teachers active in that class+year, excluding the complainant.
+
+exports.lookupRespondants = async (req, res) => {
+  try {
+    const { complainantId, complainantType, classId, academicYearId } = req.query;
+
+    if (!complainantId || !complainantType || !classId || !academicYearId) {
+      return res.status(400).json({
+        message: 'complainantId, complainantType, classId and academicYearId are all required.',
+      });
+    }
+
+    // Students enrolled in that class+year (exclude complainant if they are a student)
+    const enrollmentWhere = { classId, academicYearId, status: 'ACTIVE' };
+    if (complainantType === 'student') {
+      enrollmentWhere.studentId = { [Op.ne]: complainantId };
+    }
+
+    const enrollments = await Enrollment.findAll({
+      where: enrollmentWhere,
+      include: [{ model: User, as: 'student', attributes: ['id', 'fullName', 'studentId'] }],
+    });
+    const students = enrollments.map((e) => e.student).filter(Boolean);
+
+    // Teachers assigned to that class+year (exclude complainant if they are a teacher)
+    const assignmentWhere = { classId, academicYearId };
+    if (complainantType === 'teacher') {
+      assignmentWhere.teacherId = { [Op.ne]: complainantId };
+    }
+
+    const assignments = await CourseAssignment.findAll({
+      where: assignmentWhere,
+      include: [{ model: Teacher, as: 'teacher', attributes: ['id', 'fullName', 'userName'] }],
+    });
+
+    // Deduplicate (teacher may teach multiple courses in the same class)
+    const teacherMap = {};
+    assignments.forEach((a) => {
+      if (a.teacher) teacherMap[a.teacher.id] = a.teacher;
+    });
+    const teachers = Object.values(teacherMap);
+
+    return res.status(200).json({ students, teachers });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };

@@ -210,6 +210,7 @@ exports.loginTeacher = async (req, res) => {
     const token = jwt.sign(
       {
         id: teacher.id,
+        fullName: teacher.fullName,
         userName: teacher.userName,
         role: role
           ? {
@@ -219,7 +220,7 @@ exports.loginTeacher = async (req, res) => {
           : null,
         permissions,
       },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || "secretkey",
       {
         expiresIn: "1d",
       }

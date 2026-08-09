@@ -7,9 +7,6 @@ const { updateUserSchema } = require("../validations/user.validation");
 const upload = require("../middleware/upload");
 // const {auth, authorise} = require('../middleware/auth');
 
-// Apply authentication middleware to all routes
-// router.use(auth);
-
 router.post(
   "/register",
   upload.fields([
@@ -19,9 +16,12 @@ router.post(
   ]),
   userController.registerUser,
 );
-router.get("/me", userController.getCurrentUser);
+
+// /me routes require a valid JWT so req.user is populated
+router.get("/me", auth, userController.getCurrentUser);
 router.put(
   "/me",
+  auth,
   upload.fields([
     { name: "studentPhoto", maxCount: 1 },
     { name: "familyPhoto", maxCount: 1 },
@@ -30,9 +30,10 @@ router.put(
   validate(updateUserSchema),
   userController.updateCurrentUser,
 );
-router.get("/",  userController.getAllUsers);
+
+router.get("/", userController.getAllUsers);
 router.get("/filter", userController.getUsersByFilter);
-router.get("/:id",  userController.getUserById);
+router.get("/:id", userController.getUserById);
 router.put(
   "/:id",
   upload.fields([
@@ -42,6 +43,8 @@ router.put(
   ]),
   userController.updateStudent,
 );
-router.delete("/:id", userController.deleteUser);
+
+// DELETE requires auth so req.user is available for the self-delete guard
+router.delete("/:id", auth, userController.deleteUser);
 
 module.exports = router;
