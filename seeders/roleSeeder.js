@@ -11,6 +11,11 @@ async function seedRoles() {
         name: "STUDENT",
         description: "Student",
       },
+
+            {
+        name: "SUPER ADMIN",
+        description: "Super Admin",
+      },
     ];
 
     for (const role of roles) {
