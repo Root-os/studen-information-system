@@ -3,11 +3,13 @@ import ThemeContext from "../../components/layout/ThemeContext";
 import DataTable from "../../components/ui/simpletable";
 import api from "../../hooks/api";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
-import { useToast } from "../../components/ui/toast"; 
+import { useToast } from "../../components/ui/toast";
+import usePagePermission from "../../hooks/userPagePermission";
 
 const ManagementPage = () => {
   const { theme, currentTheme } = useContext(ThemeContext);
-  const { success, error } = useToast(); 
+  const { success, error } = useToast();
+  const { canCreate, canUpdate, canDelete } = usePagePermission("managment");
 
   const [managementRoles, setManagementRoles] = useState([]);
   const [users, setUsers] = useState([]);
@@ -116,19 +118,22 @@ const ManagementPage = () => {
       accessor: "actions",
       render: (row) => (
         <div className="flex gap-2">
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
-          >
-            <FiEdit size={16} />
-          </button>
-
-          <button
-            onClick={() => setConfirmDelete(row.id)}
-            className="p-2 rounded-md hover:bg-red-100 text-red-500"
-          >
-            <FiTrash2 size={16} />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
+            >
+              <FiEdit size={16} />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => setConfirmDelete(row.id)}
+              className="p-2 rounded-md hover:bg-red-100 text-red-500"
+            >
+              <FiTrash2 size={16} />
+            </button>
+          )}
         </div>
       ),
     },
@@ -142,12 +147,14 @@ const ManagementPage = () => {
       {/* Header */}
       <div className={`p-6 rounded-lg shadow flex justify-between ${currentTheme === "dark" ? "bg-gray-800" : "bg-white"}`}>
         <h2 className={`text-xl font-bold ${modalText}`}>Management Roles</h2>
-        <button
-          onClick={() => { setEditingRole(null); setShowModal(true); }}
-          className={`${theme.primary} text-white px-4 py-2 rounded`}
-        >
-          + Assign Role
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => { setEditingRole(null); setShowModal(true); }}
+            className={`${theme.primary} text-white px-4 py-2 rounded`}
+          >
+            + Assign Role
+          </button>
+        )}
       </div>
 
       {/* Table */}

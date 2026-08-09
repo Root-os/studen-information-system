@@ -4,10 +4,12 @@ import DataTable from "../../components/ui/simpletable";
 import api from "../../hooks/api";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { useToast } from "../../components/ui/toast";
+import usePagePermission from "../../hooks/userPagePermission";
 
 const UserDepartmentPage = () => {
   const { theme, currentTheme } = useContext(ThemeContext);
   const { success, error } = useToast();
+  const { canCreate, canUpdate, canDelete } = usePagePermission("members");
 
   const [assignments, setAssignments] = useState([]);
   const [users, setUsers] = useState([]);
@@ -108,18 +110,22 @@ const UserDepartmentPage = () => {
       accessor: "actions",
       render: (row) => (
         <div className="flex gap-2">
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
-          >
-            <FiEdit size={16} />
-          </button>
-          <button
-            onClick={() => setConfirmDelete(row.id)}
-            className="p-2 rounded-md hover:bg-red-100 text-red-500"
-          >
-            <FiTrash2 size={16} />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-2 rounded-md hover:bg-blue-100 text-blue-500"
+            >
+              <FiEdit size={16} />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => setConfirmDelete(row.id)}
+              className="p-2 rounded-md hover:bg-red-100 text-red-500"
+            >
+              <FiTrash2 size={16} />
+            </button>
+          )}
         </div>
       ),
     },
@@ -137,15 +143,17 @@ const UserDepartmentPage = () => {
         } p-6 rounded-lg shadow flex justify-between`}
       >
         <h2 className={`text-xl font-bold ${modalText}`}>User-Department Assignments</h2>
-        <button
-          onClick={() => {
-            setEditingAssignment(null);
-            setShowModal(true);
-          }}
-          className={`${theme.primary} text-white px-4 py-2 rounded`}
-        >
-          + Assign User
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => {
+              setEditingAssignment(null);
+              setShowModal(true);
+            }}
+            className={`${theme.primary} text-white px-4 py-2 rounded`}
+          >
+            + Assign User
+          </button>
+        )}
       </div>
 
       {/* Table */}

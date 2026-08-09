@@ -6,11 +6,13 @@ import DataTable from "../../components/ui/simpletable";
 import api from "../../hooks/api";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { useToast } from "../../components/ui/toast";
+import usePagePermission from "../../hooks/userPagePermission";
 
 const LettersPage = () => {
   const { theme, currentTheme } = useContext(ThemeContext);
   const { success, error } = useToast();
   const navigate = useNavigate();
+  const { canCreate } = usePagePermission("letter");
   const [letters, setLetters] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -129,12 +131,14 @@ const LettersPage = () => {
       {/* Header */}
       <div className={`${currentTheme === "dark" ? "bg-gray-800" : "bg-white"} p-6 rounded-lg shadow flex justify-between`}>
         <h2 className={`text-xl font-bold ${modalText}`}>Letters</h2>
-        <button
-          onClick={() => setShowModal(true)}
-          className={`${theme.primary} text-white px-4 py-2 rounded`}
-        >
-          + Send Letter
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => setShowModal(true)}
+            className={`${theme.primary} text-white px-4 py-2 rounded`}
+          >
+            + Send Letter
+          </button>
+        )}
       </div>
 
       {/* Table */}

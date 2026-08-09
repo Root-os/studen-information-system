@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext, useCallback } from "react";
 import api from "../../hooks/api";
 import ThemeContext from "../../components/layout/ThemeContext";
 import { useToast } from "../../components/ui/toast";
+import usePagePermission from "../../hooks/userPagePermission";
 import {
   FiEdit,
   FiTrash2,
@@ -19,7 +20,8 @@ import {
 } from "react-icons/fi";
 
 const getApiOrigin = () => {
-  const envUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  const envUrl =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
   return envUrl.replace(/\/api\/?$/, "");
 };
 
@@ -32,7 +34,10 @@ const resolveImageUrl = (url) => {
 
   // Auto-convert Unsplash webpage page URLs (e.g. https://unsplash.com/photos/slug-id) to direct image stream
   if (str.includes("unsplash.com/photos/")) {
-    const slug = str.split("unsplash.com/photos/")[1]?.split("?")[0]?.split("/")[0];
+    const slug = str
+      .split("unsplash.com/photos/")[1]
+      ?.split("?")[0]
+      ?.split("/")[0];
     if (slug) {
       const parts = slug.split("-");
       const photoId = parts[parts.length - 1];
@@ -50,7 +55,11 @@ const resolveImageUrl = (url) => {
     }
   }
 
-  if (str.startsWith("http://") || str.startsWith("https://") || str.startsWith("data:")) {
+  if (
+    str.startsWith("http://") ||
+    str.startsWith("https://") ||
+    str.startsWith("data:")
+  ) {
     return str;
   }
 
@@ -93,10 +102,11 @@ const BlogPage = () => {
   const { theme, currentTheme } = useContext(ThemeContext);
   const isDark = currentTheme === "dark";
   const { success, error } = useToast();
+  const { canCreate, canUpdate, canDelete } = usePagePermission("blog");
 
   // State
   const [blogs, setBlogs] = useState([]);
-  const [recentBlogs, setRecentBlogs] = useState([]);
+  // const [recentBlogs, setRecentBlogs] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(6);
@@ -201,10 +211,14 @@ const BlogPage = () => {
   // Open Edit Modal
   const handleOpenEdit = (blog) => {
     setEditingBlog(blog);
-    const hasPublicUrl = blog.image && (blog.image.startsWith("http://") || blog.image.startsWith("https://"));
+    const hasPublicUrl =
+      blog.image &&
+      (blog.image.startsWith("http://") || blog.image.startsWith("https://"));
     setFormData({
       blogDetail: blog.blogDetail || "",
-      date: blog.date ? blog.date.split("T")[0] : new Date().toISOString().split("T")[0],
+      date: blog.date
+        ? blog.date.split("T")[0]
+        : new Date().toISOString().split("T")[0],
       image: hasPublicUrl ? blog.image : "",
     });
     setImageMode(hasPublicUrl ? "url" : "file");
@@ -263,7 +277,7 @@ const BlogPage = () => {
       setFormError(
         err?.response?.data?.message ||
           err?.response?.data?.error ||
-          "Failed to save blog post"
+          "Failed to save blog post",
       );
     } finally {
       setSubmitting(false);
@@ -286,13 +300,15 @@ const BlogPage = () => {
 
   // Filtered blogs for local search
   const filteredBlogs = blogs.filter((b) =>
-    (b.blogDetail || "").toLowerCase().includes(searchQuery.toLowerCase())
+    (b.blogDetail || "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   // UI Colors
-  const cardBg = isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200";
+  const cardBg = isDark
+    ? "bg-gray-800 border-gray-700"
+    : "bg-white border-gray-200";
   const textColor = isDark ? "text-white" : "text-gray-900";
   const subTextColor = isDark ? "text-gray-400" : "text-gray-500";
   const inputBg = isDark
@@ -308,24 +324,29 @@ const BlogPage = () => {
         <div>
           <div className="flex items-center gap-2">
             <FiBookOpen className="text-blue-500 text-xl" />
-            <h2 className={`text-xl font-bold ${textColor}`}>Blogs & Announcements</h2>
+            <h2 className={`text-xl font-bold ${textColor}`}>
+              Blogs & Announcements
+            </h2>
           </div>
           <p className={`text-xs mt-1 ${subTextColor}`}>
-            Publish, manage, and read school news, announcements, and blog articles
+            Publish, manage, and read school news, announcements, and blog
+            articles
           </p>
         </div>
 
-        <button
-          onClick={handleOpenCreate}
-          className={`${theme.primary} text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow flex items-center gap-2 hover:opacity-90 transition`}
-        >
-          <FiPlus size={18} />
-          <span>New Blog Post</span>
-        </button>
+        {canCreate && (
+          <button
+            onClick={handleOpenCreate}
+            className={`${theme.primary} text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow flex items-center gap-2 hover:opacity-90 transition`}
+          >
+            <FiPlus size={18} />
+            <span>New Blog Post</span>
+          </button>
+        )}
       </div>
 
       {/* Recent Posts Showcase (Top 3) */}
-      {recentBlogs.length > 0 && (
+      {/* {recentBlogs.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <FiClock className="text-purple-500" />
@@ -369,7 +390,7 @@ const BlogPage = () => {
             ))}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Main Blog List Section */}
       <div className={`p-6 rounded-xl shadow border space-y-4 ${cardBg}`}>
@@ -387,13 +408,17 @@ const BlogPage = () => {
           </div>
 
           <div className="text-xs text-gray-500 flex items-center justify-between sm:justify-end gap-2">
-            <span>Total Posts: <strong>{totalCount}</strong></span>
+            <span>
+              Total Posts: <strong>{totalCount}</strong>
+            </span>
           </div>
         </div>
 
         {/* Blog Cards Grid */}
         {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading blog posts...</div>
+          <div className="text-center py-12 text-gray-500">
+            Loading blog posts...
+          </div>
         ) : filteredBlogs.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <FiBookOpen size={40} className="mx-auto mb-2 opacity-50" />
@@ -405,7 +430,9 @@ const BlogPage = () => {
               <div
                 key={blog.id}
                 className={`rounded-xl border p-5 flex flex-col justify-between shadow-sm hover:shadow transition ${
-                  isDark ? "bg-gray-800/80 border-gray-700" : "bg-gray-50/50 border-gray-200"
+                  isDark
+                    ? "bg-gray-800/80 border-gray-700"
+                    : "bg-gray-50/50 border-gray-200"
                 }`}
               >
                 <div className="space-y-3">
@@ -432,7 +459,9 @@ const BlogPage = () => {
                   </div>
 
                   {/* Blog Detail Text */}
-                  <p className={`text-sm whitespace-pre-wrap line-clamp-4 leading-relaxed ${textColor}`}>
+                  <p
+                    className={`text-sm whitespace-pre-wrap line-clamp-4 leading-relaxed ${textColor}`}
+                  >
                     {blog.blogDetail}
                   </p>
                 </div>
@@ -448,21 +477,25 @@ const BlogPage = () => {
                   </button>
 
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleOpenEdit(blog)}
-                      title="Edit Post"
-                      className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 transition"
-                    >
-                      <FiEdit size={16} />
-                    </button>
+                    {canUpdate && (
+                      <button
+                        onClick={() => handleOpenEdit(blog)}
+                        title="Edit Post"
+                        className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 transition"
+                      >
+                        <FiEdit size={16} />
+                      </button>
+                    )}
 
-                    <button
-                      onClick={() => setConfirmDeleteId(blog.id)}
-                      title="Delete Post"
-                      className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 transition"
-                    >
-                      <FiTrash2 size={16} />
-                    </button>
+                    {canDelete && (
+                      <button
+                        onClick={() => setConfirmDeleteId(blog.id)}
+                        title="Delete Post"
+                        className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 transition"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -483,7 +516,9 @@ const BlogPage = () => {
               className={`px-2 py-1 rounded border ${inputBg}`}
             >
               {[6, 10, 20, 50].map((n) => (
-                <option key={n} value={n}>{n}</option>
+                <option key={n} value={n}>
+                  {n}
+                </option>
               ))}
             </select>
           </div>
@@ -493,7 +528,9 @@ const BlogPage = () => {
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               className={`px-3 py-1.5 rounded border disabled:opacity-40 ${
-                isDark ? "border-gray-700 hover:bg-gray-700" : "border-gray-300 hover:bg-gray-100"
+                isDark
+                  ? "border-gray-700 hover:bg-gray-700"
+                  : "border-gray-300 hover:bg-gray-100"
               }`}
             >
               Previous
@@ -507,7 +544,9 @@ const BlogPage = () => {
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((p) => p + 1)}
               className={`px-3 py-1.5 rounded border disabled:opacity-40 ${
-                isDark ? "border-gray-700 hover:bg-gray-700" : "border-gray-300 hover:bg-gray-100"
+                isDark
+                  ? "border-gray-700 hover:bg-gray-700"
+                  : "border-gray-300 hover:bg-gray-100"
               }`}
             >
               Next
@@ -521,7 +560,9 @@ const BlogPage = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div
             className={`w-full max-w-lg rounded-xl shadow-xl border overflow-hidden flex flex-col max-h-[90vh] ${
-              isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
+              isDark
+                ? "bg-gray-900 border-gray-700"
+                : "bg-white border-gray-200"
             }`}
           >
             {/* Header */}
@@ -531,7 +572,9 @@ const BlogPage = () => {
               }`}
             >
               <h3 className={`text-base font-semibold ${textColor}`}>
-                {editingBlog ? `Edit Blog Post (ID #${editingBlog.id})` : "Create Blog Post"}
+                {editingBlog
+                  ? `Edit Blog Post (ID #${editingBlog.id})`
+                  : "Create Blog Post"}
               </h3>
               <button
                 onClick={() => {
@@ -545,7 +588,10 @@ const BlogPage = () => {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 text-sm">
+            <form
+              onSubmit={handleSubmit}
+              className="p-6 space-y-4 overflow-y-auto flex-1 text-sm"
+            >
               {formError && (
                 <div className="bg-red-50 border border-red-300 text-red-700 text-xs rounded px-3 py-2 dark:bg-red-950/50 dark:border-red-800 dark:text-red-300">
                   {formError}
@@ -554,14 +600,18 @@ const BlogPage = () => {
 
               {/* Date */}
               <div>
-                <label className={`block text-xs font-medium mb-1 ${subTextColor}`}>
+                <label
+                  className={`block text-xs font-medium mb-1 ${subTextColor}`}
+                >
                   Publication Date
                 </label>
                 <input
                   type="date"
                   required
                   value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date: e.target.value })
+                  }
                   className={`w-full px-3 py-2 rounded border focus:outline-none focus:ring-2 focus:ring-blue-400 ${inputBg}`}
                 />
               </div>
@@ -569,7 +619,9 @@ const BlogPage = () => {
               {/* Image Source Mode Selector */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className={`block text-xs font-medium ${subTextColor}`}>
+                  <label
+                    className={`block text-xs font-medium ${subTextColor}`}
+                  >
                     Header Image (Optional)
                   </label>
 
@@ -581,8 +633,8 @@ const BlogPage = () => {
                         imageMode === "file"
                           ? "bg-blue-600 text-white"
                           : isDark
-                          ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
                       <span className="flex items-center gap-1">
@@ -597,8 +649,8 @@ const BlogPage = () => {
                         imageMode === "url"
                           ? "bg-blue-600 text-white"
                           : isDark
-                          ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
                       <span className="flex items-center gap-1">
@@ -612,7 +664,9 @@ const BlogPage = () => {
                   <div className="space-y-2">
                     <div
                       className={`border-2 border-dashed rounded-lg p-4 text-center ${
-                        isDark ? "border-gray-700 bg-gray-800/40" : "border-gray-300 bg-gray-50"
+                        isDark
+                          ? "border-gray-700 bg-gray-800/40"
+                          : "border-gray-300 bg-gray-50"
                       }`}
                     >
                       <input
@@ -626,16 +680,27 @@ const BlogPage = () => {
                         htmlFor="blog-image-file"
                         className="cursor-pointer flex flex-col items-center justify-center gap-1 text-xs text-blue-500 hover:underline"
                       >
-                        <FiUploadCloud size={24} className="text-blue-500 mb-1" />
-                        <span className="font-semibold">Click to upload image from machine</span>
-                        <span className="text-[11px] text-gray-400">JPG, PNG, WEBP, GIF up to 10MB</span>
+                        <FiUploadCloud
+                          size={24}
+                          className="text-blue-500 mb-1"
+                        />
+                        <span className="font-semibold">
+                          Click to upload image from machine
+                        </span>
+                        <span className="text-[11px] text-gray-400">
+                          JPG, PNG, WEBP, GIF up to 10MB
+                        </span>
                       </label>
                     </div>
 
                     {/* Preview of selected local file */}
                     {filePreview && (
                       <div className="relative rounded-lg overflow-hidden border border-blue-300 dark:border-blue-700 h-28 bg-gray-100 dark:bg-gray-800">
-                        <img src={filePreview} alt="Selected preview" className="w-full h-full object-cover" />
+                        <img
+                          src={filePreview}
+                          alt="Selected preview"
+                          className="w-full h-full object-cover"
+                        />
                         <button
                           type="button"
                           onClick={clearFileSelection}
@@ -669,7 +734,10 @@ const BlogPage = () => {
                     {/* Live Preview for Public URL */}
                     {formData.image.trim() && (
                       <div className="rounded-lg overflow-hidden border border-blue-300 dark:border-blue-700 h-28 bg-gray-100 dark:bg-gray-800 relative">
-                        <BlogImage src={formData.image.trim()} alt="Public URL Live Preview" />
+                        <BlogImage
+                          src={formData.image.trim()}
+                          alt="Public URL Live Preview"
+                        />
                         <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] px-2 py-1 truncate flex items-center gap-1">
                           <FiCheckCircle className="text-green-400" />
                           <span>URL Image Live Preview</span>
@@ -682,7 +750,9 @@ const BlogPage = () => {
 
               {/* Blog Detail / Content */}
               <div>
-                <label className={`block text-xs font-medium mb-1 ${subTextColor}`}>
+                <label
+                  className={`block text-xs font-medium mb-1 ${subTextColor}`}
+                >
                   Blog Content / Announcement Detail
                 </label>
                 <textarea
@@ -691,7 +761,9 @@ const BlogPage = () => {
                   minLength={3}
                   placeholder="Write the full announcement or blog post details here..."
                   value={formData.blogDetail}
-                  onChange={(e) => setFormData({ ...formData, blogDetail: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, blogDetail: e.target.value })
+                  }
                   className={`w-full px-3 py-2 rounded border focus:outline-none focus:ring-2 focus:ring-blue-400 ${inputBg}`}
                 />
               </div>
@@ -709,7 +781,9 @@ const BlogPage = () => {
                     clearFileSelection();
                   }}
                   className={`px-4 py-2 rounded border ${
-                    isDark ? "border-gray-700 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    isDark
+                      ? "border-gray-700 text-gray-300 hover:bg-gray-800"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   Cancel
@@ -720,7 +794,13 @@ const BlogPage = () => {
                   disabled={submitting}
                   className={`${theme.primary} text-white px-5 py-2 rounded font-medium disabled:opacity-50`}
                 >
-                  {submitting ? (editingBlog ? "Saving..." : "Publishing...") : editingBlog ? "Update Post" : "Publish Post"}
+                  {submitting
+                    ? editingBlog
+                      ? "Saving..."
+                      : "Publishing..."
+                    : editingBlog
+                      ? "Update Post"
+                      : "Publish Post"}
                 </button>
               </div>
             </form>
@@ -733,7 +813,9 @@ const BlogPage = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div
             className={`w-full max-w-lg rounded-xl shadow-xl border overflow-hidden flex flex-col max-h-[90vh] ${
-              isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
+              isDark
+                ? "bg-gray-900 border-gray-700"
+                : "bg-white border-gray-200"
             }`}
           >
             <div
@@ -773,7 +855,9 @@ const BlogPage = () => {
 
               <div
                 className={`p-4 rounded-lg border leading-relaxed whitespace-pre-wrap ${
-                  isDark ? "bg-gray-800/60 border-gray-700 text-gray-200" : "bg-gray-50 border-gray-200 text-gray-800"
+                  isDark
+                    ? "bg-gray-800/60 border-gray-700 text-gray-200"
+                    : "bg-gray-50 border-gray-200 text-gray-800"
                 }`}
               >
                 {viewingBlog.blogDetail}
@@ -788,7 +872,9 @@ const BlogPage = () => {
               <button
                 onClick={() => setViewingBlog(null)}
                 className={`px-4 py-2 rounded border text-xs ${
-                  isDark ? "border-gray-700 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  isDark
+                    ? "border-gray-700 text-gray-300 hover:bg-gray-800"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 Close
@@ -803,18 +889,25 @@ const BlogPage = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div
             className={`p-6 rounded-xl shadow-xl border w-full max-w-sm ${
-              isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
+              isDark
+                ? "bg-gray-900 border-gray-700"
+                : "bg-white border-gray-200"
             }`}
           >
-            <h3 className={`text-lg font-semibold mb-2 ${textColor}`}>Delete Blog Post</h3>
+            <h3 className={`text-lg font-semibold mb-2 ${textColor}`}>
+              Delete Blog Post
+            </h3>
             <p className={`text-xs mb-5 ${subTextColor}`}>
-              Are you sure you want to delete this blog post? This action cannot be undone.
+              Are you sure you want to delete this blog post? This action cannot
+              be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setConfirmDeleteId(null)}
                 className={`px-4 py-2 text-xs rounded border ${
-                  isDark ? "border-gray-700 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  isDark
+                    ? "border-gray-700 text-gray-300 hover:bg-gray-800"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 Cancel

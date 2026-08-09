@@ -4,6 +4,7 @@ import api from "../../hooks/api";
 import ThemeContext from "../../components/layout/ThemeContext";
 import { AuthContext } from "../../contexts/AuthContext";
 import { useToast } from "../../components/ui/toast";
+import usePagePermission from "../../hooks/userPagePermission";
 import {
   FiShield,
   FiPlus,
@@ -49,6 +50,7 @@ const PermissionsPage = () => {
   const isDark = currentTheme === "dark";
   const { user } = useContext(AuthContext);
   const { success, error } = useToast();
+  const { canCreate, canUpdate, canDelete } = usePagePermission("permissions");
 
   // State
   const [permissions, setPermissions] = useState([]);
@@ -365,23 +367,27 @@ const PermissionsPage = () => {
           )}
 
           {/* Edit (Pending Only) */}
-          <button
-            title={row.status === "PENDING" ? "Edit Request" : "Only pending requests can be edited"}
-            disabled={row.status !== "PENDING"}
-            onClick={() => handleOpenEdit(row)}
-            className="p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 disabled:opacity-30 disabled:hover:bg-transparent transition"
-          >
-            <FiEdit size={16} />
-          </button>
+          {canUpdate && (
+            <button
+              title={row.status === "PENDING" ? "Edit Request" : "Only pending requests can be edited"}
+              disabled={row.status !== "PENDING"}
+              onClick={() => handleOpenEdit(row)}
+              className="p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 disabled:opacity-30 disabled:hover:bg-transparent transition"
+            >
+              <FiEdit size={16} />
+            </button>
+          )}
 
           {/* Delete */}
-          <button
-            title="Delete Request"
-            onClick={() => setConfirmDeleteId(row.id)}
-            className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 transition"
-          >
-            <FiTrash2 size={16} />
-          </button>
+          {canDelete && (
+            <button
+              title="Delete Request"
+              onClick={() => setConfirmDeleteId(row.id)}
+              className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 transition"
+            >
+              <FiTrash2 size={16} />
+            </button>
+          )}
         </div>
       ),
     },
@@ -411,13 +417,15 @@ const PermissionsPage = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenCreate}
-          className={`${theme.primary} text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow flex items-center gap-2 hover:opacity-90 transition`}
-        >
-          <FiPlus size={18} />
-          <span>Request Permission</span>
-        </button>
+        {canCreate && (
+          <button
+            onClick={handleOpenCreate}
+            className={`${theme.primary} text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow flex items-center gap-2 hover:opacity-90 transition`}
+          >
+            <FiPlus size={18} />
+            <span>Request Permission</span>
+          </button>
+        )}
       </div>
 
       {/* Summary Cards */}

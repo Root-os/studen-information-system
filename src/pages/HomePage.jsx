@@ -8,6 +8,7 @@ import {
   FiAlertCircle, FiFileText, FiGrid, FiBriefcase,
   FiLayers, FiTrendingUp, FiRefreshCw, FiExternalLink,
   FiMessageSquare, FiCheckCircle, FiClock, FiXCircle,
+  FiCalendar, FiBarChart2, FiInbox, FiSend,
 } from "react-icons/fi";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -413,4 +414,264 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+// ─── Teacher Dashboard ────────────────────────────────────────────────────────
+
+const TeacherDashboard = () => {
+  const { theme, currentTheme } = useContext(ThemeContext);
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const isDark = currentTheme === "dark";
+
+  const [loading, setLoading] = useState(true);
+  const [lastRefreshed, setLastRefreshed] = useState(null);
+
+  // raw data
+  const [assignments, setAssignments]     = useState([]);   // course assignments
+  const [attendanceSessions, setAttendanceSessions] = useState([]); // attendance records
+  const [markLists, setMarkLists]         = useState([]);
+  const [myComplaints, setMyComplaints]   = useState([]);   // filed by me
+  const [receivedComplaints, setReceivedComplaints] = useState([]); // against me
+
+  const fetchAll = useCallback(async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const [assignRes, attendRes, markRes, filedRes, receivedRes] =
+        await Promise.allSettled([
+          api.get(`/courseAssign/teacher/${user.id}`),
+          api.get("/attendance", { params: { takenBy: user.id } }),
+          api.get("/marks", { params: { teacherId: user.id, limit: 100 } }),
+          api.get(`/complaints/track/complainant/${user.id}`, { params: { type: "teacher" } }),
+          api.get(`/complaints/track/respondant/${user.id}`,  { params: { type: "teacher" } }),
+        ]);
+
+      const a = assignRes.status === "fulfilled"
+        ? (assignRes.value.data?.data ?? assignRes.value.data ?? []) : [];
+      const at = attendRes.status === "fulfilled"
+        ? (attendRes.value.data?.data ?? attendRes.value.data ?? []) : [];
+      const m = markRes.status === "fulfilled"
+        ? (markRes.value.data?.data ?? markRes.value.data ?? []) : [];
+      const fc = filedRes.status === "fulfilled"
+        ? (filedRes.value.data ?? []) : [];
+      const rc = receivedRes.status === "fulfilled"
+        ? (receivedRes.value.data ?? []) : [];
+
+      setAssignments(Array.isArray(a) ? a : []);
+      setAttendanceSessions(Array.isArray(at) ? at : []);
+      setMarkLists(Array.isArray(m) ? m : []);
+      setMyComplaints(Array.isArray(fc) ? fc : []);
+      setReceivedComplaints(Array.isArray(rc) ? rc : []);
+      setLastRefreshed(new Date());
+    } catch { /* partial failures handled above */ }
+    finally { setLoading(false); }
+  }, [user?.id]);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // ── Derived stats ─────────────────────────────────────────────────────────
+  const uniqueClasses = [...new Set(assignments.map((a) => a.classId))].length;
+  const uniqueCourses = [...new Set(assignments.map((a) => a.courseId))].length;
+
+  const filedPending    = myComplaints.filter((c) => c.status === "pending").length;
+  const filedResolved   = myComplaints.filter((c) => c.status === "resolved").length;
+  const receivedPending = receivedComplaints.filter((c) => c.status === "pending").length;
+  const receivedResolved= receivedComplaints.filter((c) => c.status === "resolved").length;
+
+  // Attendance: count distinct students marked across all sessions
+  const totalStudentsMarked = attendanceSessions.reduce((sum, s) => {
+    const details = s.attendanceDetails ?? s.AttendanceDetails ?? [];
+    return sum + details.length;
+  }, 0);
+  const presentCount = attendanceSessions.reduce((sum, s) => {
+    const details = s.attendanceDetails ?? s.AttendanceDetails ?? [];
+    return sum + details.filter((d) => d.status === "PRESENT").length;
+  }, 0);
+
+  // ── UI helpers ────────────────────────────────────────────────────────────
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const cardBg  = isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200";
+  const textPri = isDark ? "text-white" : "text-gray-900";
+  const textSub = isDark ? "text-gray-400" : "text-gray-500";
+  const rowLine = isDark ? "border-gray-700" : "border-gray-100";
+
+  const kpiCards = [
+    { icon: FiLayers,    label: "Classes Assigned",    value: uniqueClasses,            sub: "Distinct classes you teach",           color: "bg-cyan-500",    path: "/take-attendance"   },
+    { icon: FiBookOpen,  label: "Courses Assigned",    value: uniqueCourses,            sub: "Distinct courses you cover",           color: "bg-violet-500",  path: "/fill-marks"        },
+    { icon: FiClipboard, label: "Total Assignments",   value: assignments.length,       sub: "Class–course combinations",            color: "bg-teal-500",    path: "/courseAssignment"  },
+    { icon: FiCalendar,  label: "Attendance Sessions", value: attendanceSessions.length,sub: "Sessions you have recorded",           color: "bg-blue-500",    path: "/view-attendance"   },
+    { icon: FiBarChart2, label: "Mark Lists",          value: markLists.length,         sub: "Mark sheets submitted",               color: "bg-indigo-500",  path: "/view-marks"        },
+    { icon: FiSend,      label: "Complaints Filed",    value: myComplaints.length,      sub: `${filedPending} pending · ${filedResolved} resolved`,  color: "bg-orange-500",  path: "/complaints" },
+    { icon: FiInbox,     label: "Complaints Received", value: receivedComplaints.length,sub: `${receivedPending} pending · ${receivedResolved} resolved`, color: "bg-red-500", path: "/complaints" },
+  ];
+
+  return (
+    <div className="space-y-6">
+
+      {/* ── Welcome header ── */}
+      <div className={`rounded-xl shadow border p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${cardBg}`}>
+        <div>
+          <h1 className={`text-2xl font-bold ${textPri}`}>
+            {greeting}, {user?.fullName ?? user?.userName ?? "Teacher"} 👋
+          </h1>
+          <p className={`text-sm mt-1 ${textSub}`}>
+            Here's a summary of your teaching activity for this academic period.
+          </p>
+          {lastRefreshed && (
+            <p className={`text-xs mt-1 ${isDark ? "text-gray-600" : "text-gray-400"}`}>
+              Last updated: {lastRefreshed.toLocaleTimeString()}
+            </p>
+          )}
+        </div>
+        <button onClick={fetchAll} disabled={loading}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors
+            ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-700 hover:bg-gray-50"}
+            disabled:opacity-50`}>
+          <FiRefreshCw size={15} className={loading ? "animate-spin" : ""} />
+          Refresh
+        </button>
+      </div>
+
+      {/* ── KPI Cards ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {kpiCards.map(({ icon, label, value, sub, color, path }) => (
+          <StatCard key={label} icon={icon} label={label}
+            value={loading ? "…" : value} sub={loading ? "" : sub}
+            accent={color} isDark={isDark} onClick={() => navigate(path)} />
+        ))}
+      </div>
+
+      {/* ── Row 2: Attendance breakdown + Complaint breakdown ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Attendance breakdown */}
+        <Section title="Attendance Overview" isDark={isDark}
+          action={
+            <button onClick={() => navigate("/view-attendance")}
+              className={`text-xs flex items-center gap-1 ${isDark ? "text-blue-400" : "text-blue-600"}`}>
+              View all <FiExternalLink size={12} />
+            </button>
+          }>
+          <div className="space-y-4">
+            <div className={`grid grid-cols-2 gap-3`}>
+              {[
+                { label: "Sessions Recorded", value: attendanceSessions.length, color: "text-blue-500"  },
+                { label: "Student–Day Records", value: totalStudentsMarked,     color: "text-cyan-500"  },
+                { label: "Present Marks",       value: presentCount,            color: "text-green-500" },
+                { label: "Absent / Late Marks", value: totalStudentsMarked - presentCount, color: "text-red-400" },
+              ].map(({ label, value, color }) => (
+                <div key={label} className={`p-3 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-50"}`}>
+                  <p className={`text-xl font-bold ${color}`}>{fmt(loading ? null : value)}</p>
+                  <p className={`text-xs mt-0.5 ${textSub}`}>{label}</p>
+                </div>
+              ))}
+            </div>
+            {totalStudentsMarked > 0 && (
+              <>
+                <BarRow label="Present rate" value={presentCount}
+                  total={totalStudentsMarked} color="bg-green-500" isDark={isDark} />
+                <BarRow label="Absent / Late" value={totalStudentsMarked - presentCount}
+                  total={totalStudentsMarked} color="bg-red-400" isDark={isDark} />
+              </>
+            )}
+          </div>
+        </Section>
+
+        {/* Complaint breakdown */}
+        <Section title="Complaint Summary" isDark={isDark}
+          action={
+            <button onClick={() => navigate("/complaints")}
+              className={`text-xs flex items-center gap-1 ${isDark ? "text-blue-400" : "text-blue-600"}`}>
+              View all <FiExternalLink size={12} />
+            </button>
+          }>
+          <div className="space-y-3">
+            <p className={`text-xs font-semibold uppercase tracking-wide ${textSub}`}>Filed by you</p>
+            <StatusPill label="Pending"     value={filedPending}                      color="bg-yellow-400" isDark={isDark} />
+            <StatusPill label="In Progress" value={myComplaints.filter(c=>c.status==="in_progress").length} color="bg-blue-400" isDark={isDark} />
+            <StatusPill label="Resolved"    value={filedResolved}                     color="bg-green-400"  isDark={isDark} />
+            <StatusPill label="Rejected"    value={myComplaints.filter(c=>c.status==="rejected").length}    color="bg-red-400"    isDark={isDark} />
+            <div className={`border-t pt-3 mt-1 ${rowLine}`} />
+            <p className={`text-xs font-semibold uppercase tracking-wide ${textSub}`}>Received against you</p>
+            <StatusPill label="Pending"  value={receivedPending}   color="bg-yellow-400" isDark={isDark} />
+            <StatusPill label="Resolved" value={receivedResolved}  color="bg-green-400"  isDark={isDark} />
+            <StatusPill label="Others"   value={receivedComplaints.length - receivedPending - receivedResolved} color="bg-gray-400" isDark={isDark} />
+          </div>
+        </Section>
+      </div>
+
+      {/* ── Row 3: Assigned classes/courses table ── */}
+      <Section title="Your Class & Course Assignments" isDark={isDark}
+        action={
+          <button onClick={() => navigate("/take-attendance")}
+            className={`text-xs flex items-center gap-1 ${isDark ? "text-blue-400" : "text-blue-600"}`}>
+            Take Attendance <FiExternalLink size={12} />
+          </button>
+        }>
+        {loading ? (
+          <p className={`text-sm ${textSub}`}>Loading…</p>
+        ) : assignments.length === 0 ? (
+          <p className={`text-sm ${textSub}`}>No assignments found for your account.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className={`border-b text-xs uppercase tracking-wide ${rowLine} ${textSub}`}>
+                  <th className="text-left py-2 pr-4">#</th>
+                  <th className="text-left py-2 pr-4">Class</th>
+                  <th className="text-left py-2 pr-4">Course</th>
+                  <th className="text-left py-2">Academic Year</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignments.map((a, i) => (
+                  <tr key={a.id} className={`border-b ${rowLine}`}>
+                    <td className={`py-2.5 pr-4 ${textSub} text-xs`}>{i + 1}</td>
+                    <td className={`py-2.5 pr-4 font-medium ${textPri}`}>
+                      {a.class?.className ?? a.Class?.className ?? `Class #${a.classId}`}
+                    </td>
+                    <td className={`py-2.5 pr-4 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                      {a.course?.courseName ?? a.Course?.courseName ?? `Course #${a.courseId}`}
+                    </td>
+                    <td className={`py-2.5 text-xs ${textSub}`}>
+                      {a.academicYear?.yearName ?? a.AcademicYear?.yearName ?? `Year #${a.academicYearId}`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
+
+      {/* ── Quick actions ── */}
+      <Section title="Quick Actions" isDark={isDark}>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+          {[
+            { icon: FiCalendar,   label: "Take Attendance", to: "/take-attendance",  color: "bg-cyan-500"    },
+            { icon: FiClipboard,  label: "View Attendance", to: "/view-attendance",  color: "bg-blue-500"    },
+            { icon: FiBarChart2,  label: "Fill Marks",      to: "/fill-marks",       color: "bg-indigo-500"  },
+            { icon: FiTrendingUp, label: "View Marks",      to: "/view-marks",       color: "bg-violet-500"  },
+            { icon: FiSend,       label: "My Complaints",   to: "/complaints",       color: "bg-orange-500"  },
+            { icon: FiInbox,      label: "Received",        to: "/complaints",       color: "bg-red-500"     },
+          ].map(({ icon, label, to, color }) => (
+            <QuickLink key={label} icon={icon} label={label} to={to} accent={color} isDark={isDark} navigate={navigate} />
+          ))}
+        </div>
+      </Section>
+
+    </div>
+  );
+};
+
+// ─── Root: branch by role ─────────────────────────────────────────────────────
+
+const _HomePage = HomePage; // keep admin dashboard
+
+const HomePageRoot = () => {
+  const { hasRole } = useContext(AuthContext);
+  if (hasRole("teacher")) return <TeacherDashboard />;
+  return <_HomePage />;
+};
+
+export default HomePageRoot;

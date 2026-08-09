@@ -4,10 +4,12 @@ import api from "../../hooks/api";
 import { FiTrash2 } from "react-icons/fi";
 import { useToast } from "../../components/ui/toast";
 import { AuthContext } from "../../contexts/AuthContext";
+import usePagePermission from "../../hooks/userPagePermission";
 
 const AssignUserPage = () => {
   const { theme, currentTheme } = useContext(ThemeContext);
   const { success, error } = useToast();
+  const { canCreate, canDelete } = usePagePermission("assign user");
 
   const [staffUsers, setStaffUsers] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -231,12 +233,14 @@ const AssignUserPage = () => {
           </select>
 
           {/* Submit */}
-          <button
-            type="submit"
-            className={`${theme.primary} text-white px-4 py-2 rounded col-span-full md:col-span-2 lg:col-span-4`}
-          >
-            Assign User
-          </button>
+          {canCreate && (
+            <button
+              type="submit"
+              className={`${theme.primary} text-white px-4 py-2 rounded col-span-full md:col-span-2 lg:col-span-4`}
+            >
+              Assign User
+            </button>
+          )}
         </form>
       </div>
 
@@ -279,7 +283,7 @@ const AssignUserPage = () => {
                     onClick={() => handleDelete(item.id)}
                     className="text-red-500 hover:bg-red-100 p-2 rounded"
                   >
-                    <FiTrash2 />
+                    {canDelete && <FiTrash2 />}
                   </button>
                 </div>
 
