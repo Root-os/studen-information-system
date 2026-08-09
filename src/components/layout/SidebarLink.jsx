@@ -27,18 +27,17 @@ export const menuItems = [
         label: "Add Student",
         icon: FiUser,
         path: "/register-student",
-        // permissionKey: "add student",
         action: "create",
       },
       {
         label: "View Students",
         icon: FiUser,
         path: "/view-students",
-        // permissionKey: "view students",
         action: "view",
       },
     ],
   },
+
   {
     label: "Teacher",
     icon: FiFileText,
@@ -78,7 +77,7 @@ export const menuItems = [
     label: "Attendance",
     icon: FiClipboard,
     permissionKey: "attendance",
-    allowedRoles: ["Teacher"], // always visible for Teacher role
+    allowedRoles: ["Teacher"],
     children: [
       {
         label: "Take Attendance",
@@ -99,7 +98,7 @@ export const menuItems = [
     label: "Mark List",
     icon: FiClipboard,
     permissionKey: "marklist",
-    allowedRoles: ["Teacher"], 
+    allowedRoles: ["Teacher"],
     children: [
       {
         label: "Fill Mark",
@@ -114,6 +113,17 @@ export const menuItems = [
         action: "view",
       },
     ],
+  },
+
+  // One Complaints entry for everyone:
+  // - Teacher / Student: always visible (allowedRoles bypass), see scoped view
+  // - Admin / other roles: need the "complaints" permission, see full admin view
+  {
+    label: "Complaints",
+    icon: FiAlertCircle,
+    path: "/complaints",
+    permissionKey: "complaints",
+    allowedRoles: ["Teacher", "Student"],
   },
 
   {
@@ -151,13 +161,6 @@ export const menuItems = [
     permissionKey: "assign user",
   },
 
-  // {
-  //   label: "Managment",
-  //   icon: FiFileText,
-  //   path: "/managements",
-  //   permissionKey: "managment",
-  // },
-
   {
     label: "Letter",
     icon: FiFileText,
@@ -166,10 +169,10 @@ export const menuItems = [
   },
 
   {
-    label: "Complaints",
-    icon: FiAlertCircle,
-    path: "/complaints",
-    permissionKey: "complaints",
+    label: "Blog",
+    icon: FiFileText,
+    path: "/blog",
+    permissionKey: "blog",
   },
 
   {
@@ -191,12 +194,5 @@ export const menuItems = [
     icon: FiFileText,
     path: "/punishments",
     permissionKey: "punishments",
-  },
-
-  {
-    label: "Blog",
-    icon: FiFileText,
-    path: "/blog",
-    permissionKey: "blog",
   },
 ];

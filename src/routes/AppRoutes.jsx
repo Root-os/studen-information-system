@@ -43,6 +43,8 @@ import ClassesPage from "../pages/Class/ClassPage";
 import ProtectedRoute from "./ProtectedRoute";
 import MarkListPage from "../pages/Marks/MarkListPage";
 import ViewMarkList from "../pages/Marks/ViewMarkList";
+import BlogPage from "../pages/Blog/BlogPage";
+import PermissionsPage from "../pages/Permission/PermissionsPage";
 
 import { AuthContext } from "../contexts/AuthContext";
 
@@ -188,7 +190,7 @@ const AppRoutes = () => {
         <Route
           path="complaints"
           element={
-            <ProtectedRoute permissionKey="complaints">
+            <ProtectedRoute permissionKey="complaints" allowedRoles={["Teacher", "Student"]}>
               <ComplaintsPage />
             </ProtectedRoute>
           }
@@ -271,6 +273,24 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute permissionKey="assign user">
               <AssignUserPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="blog"
+          element={
+            <ProtectedRoute permissionKey="blog">
+              <BlogPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="permissions"
+          element={
+            <ProtectedRoute permissionKey="permissions">
+              <PermissionsPage />
             </ProtectedRoute>
           }
         />
