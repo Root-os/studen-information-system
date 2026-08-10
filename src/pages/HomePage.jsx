@@ -241,9 +241,9 @@ const HomePage = () => {
           <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
             {greeting}, {displayName} 👋
           </h1>
-          <p className={`text-sm mt-1 ${textSub}`}>
+     {    /* <p className={`text-sm mt-1 ${textSub}`}>
             Here's what's happening across your Sunday School system today.
-          </p>
+          </p>*/}
           {lastRefreshed && (
             <p className={`text-xs mt-1 ${isDark ? "text-gray-600" : "text-gray-400"}`}>
               Last updated: {lastRefreshed.toLocaleTimeString()}
