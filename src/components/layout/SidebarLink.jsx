@@ -175,12 +175,12 @@ export const menuItems = [
     permissionKey: "blog",
   },
 
-  {
-    label: "Flagged Students",
-    icon: FiTrendingUp,
-    path: "/flagged-students",
-    permissionKey: "flagged students",
-  },
+  // {
+  //   label: "Flagged Students",
+  //   icon: FiTrendingUp,
+  //   path: "/flagged-students",
+  //   permissionKey: "flagged students",
+  // },
 
   {
     label: "Permissions",
@@ -189,10 +189,10 @@ export const menuItems = [
     permissionKey: "permissions",
   },
 
-  {
-    label: "Punishments",
-    icon: FiFileText,
-    path: "/punishments",
-    permissionKey: "punishments",
-  },
+  // {
+  //   label: "Punishments",
+  //   icon: FiFileText,
+  //   path: "/punishments",
+  //   permissionKey: "punishments",
+  // },
 ];
