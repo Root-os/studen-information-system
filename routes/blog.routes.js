@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const blogController = require('../controllers/blog.controller');
-const uploadBlog = require('../middleware/uploadBlog');
+const uploadBlog = require('../middleware/upload');
 const { validate } = require('../middleware/validation');
 const { createBlogSchema, updateBlogSchema, idParam } = require('../validations/blog.validation');
 

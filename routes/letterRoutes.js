@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const letterController = require("../controllers/letter.controller");
-const upload = require("../middleware/uploadLetter"); 
+const upload = require("../middleware/upload"); 
 
 // Create a new letter (supports optional attachment)
 router.post("/send", upload.single("attachment"), letterController.create);
