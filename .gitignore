@@ -2,3 +2,4 @@ node_modules/
 dist/
 .env
 school_db.sql
+uploads/
