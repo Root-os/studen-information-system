@@ -2,4 +2,11 @@ node_modules/
 dist/
 .env
 school_db.sql
-uploads/
+
+uploads/*
+!uploads/blogs/
+!uploads/blogs/.gitkeep
+!uploads/user/
+!uploads/user/.gitkeep
+!uploads/letters/
+!uploads/letters/.gitkeep
