@@ -239,16 +239,16 @@ const HomePage = () => {
       <div className={`rounded-xl shadow border p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${cardBg}`}>
         <div>
           <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-            {greeting}, {displayName} 👋
+            {greeting}, {displayName} 
           </h1>
      {    /* <p className={`text-sm mt-1 ${textSub}`}>
             Here's what's happening across your Sunday School system today.
           </p>*/}
-          {lastRefreshed && (
+          {/* {lastRefreshed && (
             <p className={`text-xs mt-1 ${isDark ? "text-gray-600" : "text-gray-400"}`}>
               Last updated: {lastRefreshed.toLocaleTimeString()}
             </p>
-          )}
+          )} */}
         </div>
         <button
           onClick={fetchAll}
