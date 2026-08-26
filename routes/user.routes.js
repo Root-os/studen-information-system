@@ -9,7 +9,7 @@ const upload = require("../middleware/upload");
 
 router.post(
   "/register",
-  upload.fields([
+  upload("user").fields([
     { name: "studentPhoto", maxCount: 1 },
     { name: "familyPhoto", maxCount: 1 },
     { name: "otherDocument", maxCount: 1 },
