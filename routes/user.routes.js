@@ -22,7 +22,7 @@ router.get("/me", auth, userController.getCurrentUser);
 router.put(
   "/me",
   auth,
-  upload.fields([
+  upload("user").fields([
     { name: "studentPhoto", maxCount: 1 },
     { name: "familyPhoto", maxCount: 1 },
     { name: "otherDocument", maxCount: 1 },
@@ -36,7 +36,7 @@ router.get("/filter", userController.getUsersByFilter);
 router.get("/:id", userController.getUserById);
 router.put(
   "/:id",
-  upload.fields([
+  upload("user").fields([
     { name: "studentPhoto", maxCount: 1 },
     { name: "familyPhoto", maxCount: 1 },
     { name: "otherDocument", maxCount: 1 },

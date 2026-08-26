@@ -4,7 +4,7 @@ const letterController = require("../controllers/letter.controller");
 const upload = require("../middleware/upload"); 
 
 // Create a new letter (supports optional attachment)
-router.post("/send", upload.single("attachment"), letterController.create);
+router.post("/send", upload("letters").single("attachment"), letterController.create);
 
 // Get all letters
 router.get("/", letterController.getAll);
@@ -13,7 +13,7 @@ router.get("/", letterController.getAll);
 router.get("/:id", letterController.getById);
 
 // Update a letter (optionally update attachment)
-router.put("/:id", upload.single("attachment"), letterController.update);
+router.put("/:id", upload("letters").single("attachment"), letterController.update);
 
 // Delete a letter
 router.delete("/:id", letterController.delete);
