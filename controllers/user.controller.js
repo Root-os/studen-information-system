@@ -385,7 +385,7 @@ exports.loginUser = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-
+console.log("USER ROLE:", user.role);
     // generate token
 const token = jwt.sign(
   {
@@ -398,6 +398,7 @@ const token = jwt.sign(
   process.env.JWT_SECRET || "secretkey",
   { expiresIn: "1d" },
 );
+
 
     const { password: pwd, ...userData } = user.get({ plain: true });
 
