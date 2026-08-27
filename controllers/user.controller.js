@@ -387,16 +387,17 @@ exports.loginUser = async (req, res) => {
     }
 
     // generate token
-    const token = jwt.sign(
-      {
-        id: user.id,
-        fullName: user.fullName,
-        email: user.email,
-        roleId: user.roleId,
-      },
-      process.env.JWT_SECRET || "secretkey",
-      { expiresIn: "1d" },
-    );
+const token = jwt.sign(
+  {
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    roleId: user.roleId,
+    role: user.role,
+  },
+  process.env.JWT_SECRET || "secretkey",
+  { expiresIn: "1d" },
+);
 
     const { password: pwd, ...userData } = user.get({ plain: true });
 
