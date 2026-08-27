@@ -365,7 +365,15 @@ exports.loginUser = async (req, res) => {
     }
 
     // check if user exists
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({
+  where: { email },
+  include: [
+    {
+      model: Role,
+      attributes: ["id", "name"],
+    },
+  ],
+});
 
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
