@@ -6,7 +6,7 @@ const path = require("path");
 const jwt = require("jsonwebtoken");
 const generateStudentId = require("../helpers/idGenerate");
 
-const dob = date_of_birth?.trim() ? date_of_birth : null;
+
 exports.registerUser = async (req, res) => {
   const transaction = await sequelize.transaction();
 
@@ -53,7 +53,7 @@ exports.registerUser = async (req, res) => {
     if (generateId === "apply") {
       studentId = await generateStudentId();
     }
-
+    const dob = date_of_birth?.trim() ? date_of_birth : null;
     const user = await User.create(
       {
         ...otherFields,
