@@ -441,12 +441,12 @@ StaffUser.hasMany(AssignUser, {
 
 User.belongsTo(Role, {
   foreignKey: "roleId",
-  // as: "role",
+  as: "role",
 });
 
 Role.hasMany(User, {
   foreignKey: "roleId",
-  // as: "users",
+  as: "users",
 });
 
 Teacher.belongsTo(Role, {

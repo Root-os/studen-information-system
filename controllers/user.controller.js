@@ -365,15 +365,7 @@ exports.loginUser = async (req, res) => {
     }
 
     // check if user exists
-    const user = await User.findOne({
-  where: { email },
-  include: [
-    {
-      model: Role,
-      attributes: ["id", "name"],
-    },
-  ],
-});
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -385,20 +377,18 @@ exports.loginUser = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-console.log("USER ROLE:", user.role);
-    // generate token
-const token = jwt.sign(
-  {
-    id: user.id,
-    fullName: user.fullName,
-    email: user.email,
-    roleId: user.roleId,
-    role: user.role,
-  },
-  process.env.JWT_SECRET || "secretkey",
-  { expiresIn: "1d" },
-);
 
+    // generate token
+    const token = jwt.sign(
+      {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        roleId: user.roleId,
+      },
+      process.env.JWT_SECRET || "secretkey",
+      { expiresIn: "1d" },
+    );
 
     const { password: pwd, ...userData } = user.get({ plain: true });
 

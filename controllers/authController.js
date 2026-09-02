@@ -18,6 +18,7 @@ exports.login = async (req, res) => {
       include: [
         {
           model: Role,
+          as: "role",
           attributes: ["id", "name"],
         },
       ],
@@ -46,9 +47,8 @@ exports.login = async (req, res) => {
         id: account.id,
         email: account.email,
         fullName: account.fullName,
-        roleId: account.roleId,
-        role: account.Role
-          ? { id: account.Role.id, name: account.Role.name }
+        role: account.role
+          ? { id: account.role.id, name: account.role.name }
           : null,
       },
       process.env.JWT_SECRET || "secretkey",
