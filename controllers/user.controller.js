@@ -6,6 +6,7 @@ const path = require("path");
 const jwt = require("jsonwebtoken");
 const generateStudentId = require("../helpers/idGenerate");
 
+const dob = date_of_birth?.trim() ? date_of_birth : null;
 exports.registerUser = async (req, res) => {
   const transaction = await sequelize.transaction();
 
@@ -57,7 +58,7 @@ exports.registerUser = async (req, res) => {
       {
         ...otherFields,
         fullName,
-        date_of_birth,
+        date_of_birth: dob,
         email,
         password: hashedPassword,
         roleId: roleId,
